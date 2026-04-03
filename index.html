@@ -1818,9 +1818,14 @@
     let API_BASE = API_ENDPOINTS[0];
 
     const USERS = [
-      { email: "zameelraja@gmail.com", password: "zameel@003", name: "Zameel" },
-      { email: "fmfaaiz@gmail.com", password: "faaiz@003", name: "Faaiz" }
+      { email: "zameelraja@gmail.com", hash: "330cef933befbb1c3cd545c99a403efe3ef043391eaefb0869907591352732cd", name: "Zameel" },
+      { email: "fmfaaiz@gmail.com", hash: "b5160b3968069e91319d7842734e4b966d0007f97bbfeb7a26fa4b5653419c74", name: "Faaiz" }
     ];
+
+    async function sha256(text) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
 
     const CACHE_KEY = "isai_cache_v3";
     const AUTH_KEY = "isai_auth_v1";
@@ -2655,11 +2660,12 @@
       }
     };
 
-    dom.authSend.onclick = () => {
+    dom.authSend.onclick = async () => {
       const email = dom.emailInput.value.trim().toLowerCase();
       const password = $("passwordInput").value;
       if (!email || !password) { dom.authMessage.textContent = "Enter email and password"; return; }
-      const found = USERS.find(u => u.email === email && u.password === password);
+      const hashed = await sha256(password);
+      const found = USERS.find(u => u.email === email && u.hash === hashed);
       if (!found) {
         dom.authMessage.textContent = "Invalid email or password";
         return;
