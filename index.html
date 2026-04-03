@@ -2169,7 +2169,7 @@
       const row = document.createElement("div");
       row.className = `song-row${isCurrent(song) ? " active" : ""}`;
       row.innerHTML = `
-        <span class="row-num">${index + 1}</span>
+        <span class="row-num" data-idx="${index + 1}">${index + 1}</span>
         <div class="row-art">${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : ""}</div>
         <div class="row-info">
           <div class="row-title">${song.title}</div>
@@ -2564,6 +2564,13 @@
       const pl = state.playlists.find(p => p.id === plId);
       if (pl && !pl.cover_song) pl.cover_song = song;
       savePlaylists();
+      // Sync shared playlists
+      const sharedPls = getSharedPlaylists();
+      if (sharedPls.find(p => p.id === plId)) {
+        const sharedSongs = getSharedPlaylistSongs();
+        sharedSongs[plId] = state.playlistSongs[plId];
+        saveSharedPlaylists(sharedPls, sharedSongs);
+      }
       renderSidebarPlaylists();
     }
 
@@ -2597,12 +2604,18 @@
     dom.plSave.onclick = () => {
       const name = dom.plNameInput.value.trim();
       if (!name) { dom.plModalMsg.textContent = "Enter a name"; return; }
-      const pl = createPlaylist(name);
+      const isShared = $("plSharedCheck")?.checked;
+      const pl = isShared ? createSharedPlaylist(name) : createPlaylist(name);
       if (pl && state.pendingPlaylistSong) {
         addSongToPlaylist(pl.id, state.pendingPlaylistSong);
+        if (isShared) {
+          const sharedSongs = getSharedPlaylistSongs();
+          sharedSongs[pl.id] = state.playlistSongs[pl.id];
+          saveSharedPlaylists(getSharedPlaylists(), sharedSongs);
+        }
       }
       dom.playlistModal.classList.add("hidden");
-      toast(`Playlist "${name}" created`);
+      toast(`Playlist "${name}" created${isShared ? " (shared)" : ""}`);
     };
 
     dom.plCancel.onclick = () => dom.playlistModal.classList.add("hidden");
@@ -2685,17 +2698,20 @@
     dom.authCancel.onclick = () => dom.authModal.classList.add("hidden");
 
     // ── SEARCH ──
-    const doSearch = debounce(async (query) => {
+    let doSearch = debounce(async (query) => {
       if (!query.trim()) {
         dom.searchResults.innerHTML = "";
-        dom.searchEmpty.classList.remove("hidden");
+        $("searchEmpty").classList.remove("hidden");
+        renderSearchHistory();
         return;
       }
+      $("searchHistoryWrap").classList.add("hidden");
+      $("searchEmpty").classList.add("hidden");
       const token = ++state.searchToken;
-      dom.searchEmpty.classList.add("hidden");
       try {
         const songs = await searchSongs(query);
         if (token !== state.searchToken) return;
+        addSearchHistory(query);
         renderSongList(dom.searchResults, songs, songs);
       } catch {
         if (token === state.searchToken) dom.searchResults.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>`;
@@ -2706,10 +2722,14 @@
       const v = dom.searchInput.value;
       dom.searchClear.classList.toggle("hidden", !v);
       if (v && state.currentPage !== "search") switchPage("search");
+      if (!v) renderSearchHistory();
       doSearch(v);
     };
 
-    dom.searchInput.onfocus = () => { if (dom.searchInput.value) switchPage("search"); };
+    dom.searchInput.onfocus = () => {
+      if (dom.searchInput.value) switchPage("search");
+      else renderSearchHistory();
+    };
     dom.searchClear.onclick = () => { dom.searchInput.value = ""; dom.searchClear.classList.add("hidden"); dom.searchResults.innerHTML = ""; dom.searchEmpty.classList.remove("hidden"); };
 
     // ── RENDER PAGE CONTENT ──
@@ -2725,20 +2745,30 @@
       renderSongList(dom.downloadsList, songs, songs);
     }
 
-    function renderQueue() {
+    let renderQueue = function() {
       renderSongList(dom.queueList, state.currentQueue, state.currentQueue);
-    }
+    };
 
     function refreshActiveSongRows() {
       document.querySelectorAll(".song-row").forEach(row => {
         const title = row.querySelector(".row-title")?.textContent;
         const song = [...state.songs, ...state.currentQueue, ...state.favorites.map(f=>f.song), ...state.downloads].find(s => s?.title === title);
         if (song) {
-          row.classList.toggle("active", isCurrent(song));
+          const isActive = isCurrent(song);
+          row.classList.toggle("active", isActive);
           const favBtn = row.querySelector('[data-act="fav"]');
           if (favBtn) {
             favBtn.classList.toggle("is-active", isFav(song.id));
             favBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${isFav(song.id) ? "#ico-heart" : "#ico-heart-outline"}"/></svg>`;
+          }
+          // Equalizer bars
+          const numEl = row.querySelector(".row-num");
+          if (numEl) {
+            if (isActive && !audio.paused) {
+              numEl.innerHTML = '<div class="eq-bars"><span></span><span></span><span></span></div>';
+            } else {
+              numEl.textContent = numEl.dataset.idx || "";
+            }
           }
         }
       });
@@ -3057,31 +3087,6 @@
       dom.volBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${ratio === 0 ? '#ico-vol-mute' : '#ico-vol'}"/></svg>`;
     });
 
-    // ── EQUALIZER BARS IN SONG ROWS ──
-    function refreshActiveSongRowsWithEq() {
-      document.querySelectorAll(".song-row").forEach(row => {
-        const numEl = row.querySelector(".row-num");
-        if (!numEl) return;
-        const title = row.querySelector(".row-title")?.textContent;
-        const cur = currentSong();
-        if (cur && cur.title === title && !audio.paused) {
-          if (!numEl.querySelector(".eq-bars")) {
-            numEl.innerHTML = '<div class="eq-bars"><span></span><span></span><span></span></div>';
-          }
-        } else {
-          const idx = numEl.dataset.idx;
-          if (numEl.querySelector(".eq-bars")) {
-            numEl.textContent = idx || "";
-          }
-        }
-      });
-    }
-    // Patch the original refreshActiveSongRows
-    const _origRefresh = refreshActiveSongRows;
-    refreshActiveSongRows = function() {
-      _origRefresh();
-      refreshActiveSongRowsWithEq();
-    };
 
     // ── SHARED PLAYLISTS ──
     function getSharedPlaylists() { return safeParse(localStorage.getItem("isai_shared_playlists"), []); }
@@ -3114,42 +3119,6 @@
       });
     }
 
-    // Patch playlist create modal to offer shared option
-    const _origPlSave = dom.plSave.onclick;
-    dom.plSave.onclick = () => {
-      const name = dom.plNameInput.value.trim();
-      if (!name) { dom.plModalMsg.textContent = "Enter a name"; return; }
-      const isShared = $("plSharedCheck")?.checked;
-      let pl;
-      if (isShared) {
-        pl = createSharedPlaylist(name);
-      } else {
-        pl = createPlaylist(name);
-      }
-      if (pl && state.pendingPlaylistSong) {
-        addSongToPlaylist(pl.id, state.pendingPlaylistSong);
-        // If shared, also save to shared storage
-        if (isShared) {
-          const sharedSongs = getSharedPlaylistSongs();
-          sharedSongs[pl.id] = state.playlistSongs[pl.id];
-          saveSharedPlaylists(getSharedPlaylists(), sharedSongs);
-        }
-      }
-      dom.playlistModal.classList.add("hidden");
-      toast(`Playlist "${name}" created${isShared ? " (shared)" : ""}`);
-    };
-
-    // Patch addSongToPlaylist to also update shared storage if shared
-    const _origAddSong = addSongToPlaylist;
-    addSongToPlaylist = function(plId, song) {
-      _origAddSong(plId, song);
-      const sharedPls = getSharedPlaylists();
-      if (sharedPls.find(p => p.id === plId)) {
-        const sharedSongs = getSharedPlaylistSongs();
-        sharedSongs[plId] = state.playlistSongs[plId];
-        saveSharedPlaylists(sharedPls, sharedSongs);
-      }
-    };
 
     // ── QUEUE REORDER (drag & drop) ──
     function renderQueueWithDrag() {
@@ -3202,49 +3171,6 @@
     // Override renderQueue to use drag version
     renderQueue = renderQueueWithDrag;
 
-    // ── STORE EQ INDEX IN MAKE SONG ROW ──
-    const _origMakeSongRow = makeSongRow;
-    makeSongRow = function(song, index, queue) {
-      const row = _origMakeSongRow(song, index, queue);
-      const numEl = row.querySelector(".row-num");
-      if (numEl) numEl.dataset.idx = index + 1;
-      return row;
-    };
-
-    // ── UPDATE SEARCH TO SAVE HISTORY ──
-    const _origSearchInput = dom.searchInput.oninput;
-    dom.searchInput.oninput = () => {
-      const v = dom.searchInput.value;
-      dom.searchClear.classList.toggle("hidden", !v);
-      if (v && state.currentPage !== "search") switchPage("search");
-      if (!v) renderSearchHistory();
-      doSearch(v);
-    };
-    dom.searchInput.onfocus = () => {
-      if (dom.searchInput.value) switchPage("search");
-      else renderSearchHistory();
-    };
-    // Save search on actual search execution
-    const _origDoSearch = doSearch;
-    doSearch = debounce(async (query) => {
-      if (!query.trim()) {
-        dom.searchResults.innerHTML = "";
-        $("searchEmpty").classList.remove("hidden");
-        renderSearchHistory();
-        return;
-      }
-      $("searchHistoryWrap").classList.add("hidden");
-      $("searchEmpty").classList.add("hidden");
-      const token = ++state.searchToken;
-      try {
-        const songs = await searchSongs(query);
-        if (token !== state.searchToken) return;
-        addSearchHistory(query);
-        renderSongList(dom.searchResults, songs, songs);
-      } catch {
-        if (token === state.searchToken) dom.searchResults.innerHTML = '<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>';
-      }
-    }, 400);
 
     // ── INIT ──
     (async () => {
