@@ -1131,6 +1131,343 @@
     @media (max-width: 375px) {
       .card-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     }
+
+    /* ── PAGE TRANSITIONS ── */
+    .page {
+      animation: pageFadeIn 0.25s ease;
+    }
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── EQUALIZER BARS ── */
+    .eq-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+      width: 14px;
+    }
+    .eq-bars span {
+      display: block;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 1px;
+      animation: eqBounce 0.8s ease-in-out infinite alternate;
+    }
+    .eq-bars span:nth-child(1) { height: 60%; animation-delay: 0s; }
+    .eq-bars span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+    .eq-bars span:nth-child(3) { height: 40%; animation-delay: 0.4s; }
+    @keyframes eqBounce {
+      0% { height: 20%; }
+      100% { height: 100%; }
+    }
+
+    /* ── FULL-SCREEN NOW PLAYING ── */
+    .now-playing-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.35s cubic-bezier(.32,.72,.24,1), opacity 0.3s;
+      overflow-y: auto;
+    }
+    .now-playing-overlay.hidden {
+      display: flex !important;
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .now-playing-overlay.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .np-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      flex-shrink: 0;
+    }
+    .np-header button {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      color: var(--text-sub);
+      font-size: 1.2rem;
+      transition: all 0.15s;
+    }
+    .np-header button:hover { color: var(--text); background: var(--bg-highlight); }
+    .np-header .np-source {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-sub);
+    }
+
+    .np-art-wrap {
+      width: min(85vw, 380px);
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      margin: 16px 0 32px;
+      flex-shrink: 0;
+    }
+    .np-art-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .np-info {
+      text-align: center;
+      padding: 0 32px;
+      width: 100%;
+      max-width: 480px;
+    }
+    .np-info .np-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .np-info .np-artist {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    .np-progress {
+      width: 100%;
+      max-width: 480px;
+      padding: 24px 32px 8px;
+    }
+    .np-progress .np-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    .np-progress .np-fill {
+      height: 100%;
+      background: var(--text);
+      border-radius: 3px;
+      position: relative;
+      max-width: 100%;
+    }
+    .np-progress .np-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--text);
+      position: absolute;
+      right: -7px; top: 50%;
+      transform: translateY(-50%);
+    }
+    .np-progress .np-times {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      margin-top: 8px;
+    }
+
+    .np-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 16px 0;
+    }
+    .np-controls .np-ctrl {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      color: var(--text-sub);
+      transition: all 0.15s;
+    }
+    .np-controls .np-ctrl:hover { color: var(--text); transform: scale(1.1); }
+    .np-controls .np-ctrl.is-active { color: var(--accent); }
+    .np-controls .np-ctrl.np-play {
+      width: 64px; height: 64px;
+      background: var(--text);
+      color: var(--bg);
+    }
+    .np-controls .np-ctrl.np-play:hover { transform: scale(1.06); }
+    .np-controls .np-ctrl svg { width: 20px; height: 20px; fill: currentColor; }
+    .np-controls .np-ctrl.np-play svg { width: 24px; height: 24px; }
+
+    .np-extra {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 8px 0 16px;
+    }
+    .np-extra button {
+      color: var(--text-sub);
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: color 0.15s;
+    }
+    .np-extra button:hover { color: var(--text); }
+    .np-extra button.is-active { color: var(--accent); }
+    .np-extra button svg { width: 16px; height: 16px; fill: currentColor; }
+
+    /* Lyrics section in now playing */
+    .np-lyrics {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px 32px 64px;
+      text-align: center;
+    }
+    .np-lyrics .lyrics-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+    }
+    .np-lyrics .lyrics-text {
+      font-size: 1.1rem;
+      line-height: 2;
+      color: var(--text-sub);
+      white-space: pre-line;
+    }
+    .np-lyrics .lyrics-text.loading {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── SLEEP TIMER MENU ── */
+    .sleep-menu {
+      position: fixed;
+      z-index: 600;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      min-width: 180px;
+      box-shadow: 0 16px 24px rgba(0,0,0,0.5), 0 0 0 1px var(--divider);
+    }
+    .sleep-menu button {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      color: var(--text-sub);
+      text-align: left;
+      border-radius: var(--radius-sm);
+      transition: all 0.1s;
+    }
+    .sleep-menu button:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .sleep-menu button.active-timer { color: var(--accent); }
+
+    /* ── RECENTLY PLAYED CARDS ── */
+    .recent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .recent-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      cursor: pointer;
+      transition: background 0.2s;
+      height: 56px;
+    }
+    .recent-card:hover { background: rgba(255,255,255,0.1); }
+    .recent-card img {
+      width: 56px; height: 56px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .recent-card .rc-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── SEARCH HISTORY ── */
+    .search-history {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .search-history-chip {
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--bg-elevated);
+      color: var(--text-sub);
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .search-history-chip:hover { background: var(--bg-card-hover); color: var(--text); }
+    .search-history-chip .sh-remove {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 0.7rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .search-history-chip:hover .sh-remove { opacity: 1; }
+
+    /* ── QUEUE DRAG ── */
+    .queue-drag-handle {
+      cursor: grab;
+      color: var(--text-muted);
+      font-size: 1rem;
+      padding: 4px;
+      touch-action: none;
+    }
+    .queue-drag-handle:active { cursor: grabbing; }
+    .song-row.dragging {
+      opacity: 0.4;
+      background: var(--bg-elevated);
+    }
+    .song-row.drag-over {
+      border-top: 2px solid var(--accent);
+    }
+
+    /* ── DYNAMIC BG ── */
+    .dynamic-bg {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.35;
+      transition: background 1s ease;
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      .np-art-wrap { width: min(80vw, 320px); }
+      .recent-grid { grid-template-columns: repeat(2, 1fr); }
+      .recent-card .rc-title { font-size: 0.78rem; }
+    }
   </style>
 </head>
 <body>
@@ -1213,6 +1550,7 @@
 
     <!-- ── MAIN ── -->
     <div class="main-content" id="mainContent">
+      <div class="dynamic-bg" id="dynamicBg"></div>
       <div class="topbar">
         <div class="topbar-nav">
           <button id="historyBack" title="Go back">&#8592;</button>
@@ -1240,6 +1578,11 @@
         </div>
 
         <div id="homeContent" class="hidden">
+          <div id="recentSection" class="hidden" style="margin-bottom:24px;">
+            <div class="section-header"><h3>Recently Played</h3></div>
+            <div id="recentGrid" class="recent-grid"></div>
+          </div>
+
           <div id="featuredBanner" class="featured-banner"></div>
 
           <div class="section-header">
@@ -1261,6 +1604,10 @@
       <!-- SEARCH PAGE -->
       <section id="searchPage" class="page">
         <div class="page-header"><h2>Search</h2><p>Find songs from around the world</p></div>
+        <div id="searchHistoryWrap" class="hidden">
+          <div class="section-header"><h3>Recent Searches</h3></div>
+          <div id="searchHistory" class="search-history"></div>
+        </div>
         <div id="searchResults" class="song-list"></div>
         <div id="searchEmpty" class="empty-state hidden">
           <h3>Search for songs</h3>
@@ -1391,6 +1738,9 @@
     <div class="modal">
       <h3 id="plModalTitle">Create Playlist</h3>
       <input id="plNameInput" type="text" placeholder="Playlist name">
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-sub);cursor:pointer;">
+        <input type="checkbox" id="plSharedCheck" style="accent-color:var(--accent);width:16px;height:16px;"> Share with all users
+      </label>
       <div id="plPickerList" class="song-list" style="max-height:200px;overflow-y:auto"></div>
       <p id="plModalMsg" style="font-size:0.82rem;color:var(--text-sub);min-height:1.2em;"></p>
       <div class="modal-actions">
@@ -1403,10 +1753,57 @@
   <!-- CONTEXT MENU -->
   <div class="context-menu hidden" id="contextMenu"></div>
 
+  <!-- SLEEP TIMER MENU -->
+  <div class="sleep-menu hidden" id="sleepMenu"></div>
+
+  <!-- FULL-SCREEN NOW PLAYING -->
+  <div class="now-playing-overlay hidden" id="nowPlayingOverlay">
+    <div class="np-header">
+      <button id="npClose" title="Close">&#8595;</button>
+      <span class="np-source" id="npSource">Now Playing</span>
+      <button id="npSleepBtn" title="Sleep timer">&#9202;</button>
+    </div>
+    <div class="np-art-wrap">
+      <img id="npArt" src="" alt="">
+    </div>
+    <div class="np-info">
+      <div class="np-title" id="npTitle">-</div>
+      <div class="np-artist" id="npArtist">-</div>
+    </div>
+    <div class="np-progress">
+      <div class="np-track" id="npTrack">
+        <div class="np-fill" id="npFill" style="width:0%">
+          <div class="np-thumb"></div>
+        </div>
+      </div>
+      <div class="np-times">
+        <span id="npCurrent">0:00</span>
+        <span id="npTotal">0:00</span>
+      </div>
+    </div>
+    <div class="np-controls">
+      <button class="np-ctrl" id="npShuffle"><svg><use href="#ico-shuffle"/></svg></button>
+      <button class="np-ctrl" id="npPrev"><svg><use href="#ico-prev"/></svg></button>
+      <button class="np-ctrl np-play" id="npPlayPause"><svg><use href="#ico-play"/></svg></button>
+      <button class="np-ctrl" id="npNext"><svg><use href="#ico-next"/></svg></button>
+      <button class="np-ctrl" id="npRepeat"><svg><use href="#ico-repeat"/></svg></button>
+    </div>
+    <div class="np-extra">
+      <button id="npFavBtn"><svg><use href="#ico-heart-outline"/></svg> Like</button>
+      <button id="npQueueBtn"><svg><use href="#ico-queue"/></svg> Queue</button>
+      <button id="npLyricsToggle"><svg><use href="#ico-library"/></svg> Lyrics</button>
+    </div>
+    <div class="np-lyrics hidden" id="npLyrics">
+      <div class="lyrics-label">Lyrics</div>
+      <div class="lyrics-text loading" id="npLyricsText">Loading lyrics...</div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
   <audio id="audio" preload="metadata"></audio>
+  <audio id="audio2" preload="metadata"></audio>
 
   <script>
     /* ═══════════════════════════════════════════
@@ -1934,33 +2331,43 @@
       const src = await resolveSource(song);
       if (!src) { skipNext(); return; }
 
-      audio.dataset.blobUrl = src.startsWith("blob:") ? src : "";
-      audio.src = src;
+      // Crossfade
+      if (state.crossfade && !audio.paused && audio.currentTime > 0) {
+        crossfadeTo(src, song);
+      } else {
+        audio.dataset.blobUrl = src.startsWith("blob:") ? src : "";
+        audio.src = src;
+        try { await audio.play(); } catch (err) { console.warn("Playback failed", err); skipNext(); return; }
+      }
 
-      // Update UI
+      // Update player bar UI
       dom.nowArt.src = song.image || "";
       dom.nowTitle.textContent = song.title;
       dom.nowArtist.textContent = song.artist;
       dom.totalTime.textContent = fmt(song.duration);
+      updatePlayBtn(true);
       updateNowFav();
       refreshActiveSongRows();
 
-      try {
-        await audio.play();
-        updatePlayBtn(true);
-        if ("mediaSession" in navigator) {
-          navigator.mediaSession.metadata = new MediaMetadata({
-            title: song.title,
-            artist: song.artist,
-            album: song.album,
-            artwork: song.image ? [{ src: song.image, sizes: "500x500", type: "image/jpeg" }] : []
-          });
-        }
-        persistSettings({ last_song_id: song.id, last_song: song });
-      } catch (err) {
-        console.warn("Playback failed", err);
-        skipNext();
+      // Update now-playing overlay
+      updateNowPlayingOverlay(song);
+
+      // Extract color for dynamic bg
+      extractColor(song.image);
+
+      // Track recently played
+      addToRecentlyPlayed(song);
+
+      // Fetch lyrics
+      fetchLyrics(song);
+
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: song.title, artist: song.artist, album: song.album,
+          artwork: song.image ? [{ src: song.image, sizes: "500x500", type: "image/jpeg" }] : []
+        });
       }
+      persistSettings({ last_song_id: song.id, last_song: song });
     }
 
     function updatePlayBtn(playing) {
@@ -2019,12 +2426,13 @@
       dom.progressFill.style.width = pct + "%";
       dom.currentTime.textContent = fmt(audio.currentTime);
       dom.mobFill.style.width = pct + "%";
+      // Now playing overlay
+      $("npFill").style.width = pct + "%";
+      $("npCurrent").textContent = fmt(audio.currentTime);
     };
 
-    audio.onloadedmetadata = () => { dom.totalTime.textContent = fmt(audio.duration); };
+    audio.onloadedmetadata = () => { dom.totalTime.textContent = fmt(audio.duration); $("npTotal").textContent = fmt(audio.duration); };
     audio.onended = () => skipNext();
-    audio.onpause = () => updatePlayBtn(false);
-    audio.onplay = () => updatePlayBtn(true);
 
     // Progress seek
     dom.progressTrack.onclick = (e) => {
@@ -2360,6 +2768,478 @@
     dom.retryBtn.onclick = () => loadInitial(true);
     dom.topbarRefresh.onclick = () => { localStorage.removeItem(CACHE_KEY); loadInitial(true); };
 
+    // ── CROSSFADE ──
+    state.crossfade = true;
+    const audio2 = $("audio2");
+    function crossfadeTo(newSrc, song) {
+      const fadeDuration = 2000;
+      const steps = 40;
+      const interval = fadeDuration / steps;
+      let step = 0;
+      const oldVol = audio.volume;
+      audio2.src = newSrc;
+      audio2.volume = 0;
+      audio2.play().catch(() => {});
+      const timer = setInterval(() => {
+        step++;
+        const progress = step / steps;
+        audio.volume = oldVol * (1 - progress);
+        audio2.volume = oldVol * progress;
+        if (step >= steps) {
+          clearInterval(timer);
+          audio.pause();
+          audio.volume = oldVol;
+          // Swap: copy audio2 state to audio
+          audio.src = newSrc;
+          audio.currentTime = audio2.currentTime;
+          audio.volume = oldVol;
+          audio.play().catch(() => {});
+          audio2.pause();
+          audio2.src = "";
+        }
+      }, interval);
+    }
+
+    // ── DYNAMIC COLOR EXTRACTION ──
+    function extractColor(imgUrl) {
+      if (!imgUrl) { $("dynamicBg").style.background = ""; return; }
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = 8; canvas.height = 8;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, 8, 8);
+          const data = ctx.getImageData(0, 0, 8, 8).data;
+          let r = 0, g = 0, b = 0, count = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+          }
+          r = Math.round(r/count); g = Math.round(g/count); b = Math.round(b/count);
+          const color = `rgb(${r},${g},${b})`;
+          $("dynamicBg").style.background = `linear-gradient(180deg, ${color} 0%, transparent 60%)`;
+          // Also tint the now-playing overlay
+          $("nowPlayingOverlay").style.background = `linear-gradient(180deg, ${color}, #000 60%)`;
+        } catch { $("dynamicBg").style.background = ""; }
+      };
+      img.onerror = () => { $("dynamicBg").style.background = ""; };
+      img.src = imgUrl;
+    }
+
+    // ── RECENTLY PLAYED ──
+    function getRecentlyPlayed() { return safeParse(localStorage.getItem(userKey("recent")), []); }
+    function addToRecentlyPlayed(song) {
+      let recent = getRecentlyPlayed().filter(s => s.id !== song.id);
+      recent.unshift({ id: song.id, title: song.title, artist: song.artist, image: song.image, src: song.src, duration: song.duration, album: song.album });
+      if (recent.length > 20) recent = recent.slice(0, 20);
+      localStorage.setItem(userKey("recent"), JSON.stringify(recent));
+      renderRecentlyPlayed();
+    }
+    function renderRecentlyPlayed() {
+      const recent = getRecentlyPlayed();
+      const section = $("recentSection");
+      const grid = $("recentGrid");
+      if (!recent.length) { section.classList.add("hidden"); return; }
+      section.classList.remove("hidden");
+      grid.innerHTML = "";
+      recent.slice(0, 8).forEach(song => {
+        const card = document.createElement("div");
+        card.className = "recent-card";
+        card.innerHTML = `${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : '<div style="width:56px;height:56px;background:var(--bg-elevated)"></div>'}<span class="rc-title">${song.title}</span>`;
+        card.onclick = () => playSong(song, [song]);
+        grid.appendChild(card);
+      });
+    }
+
+    // ── SEARCH HISTORY ──
+    function getSearchHistory() { return safeParse(localStorage.getItem(userKey("searchHistory")), []); }
+    function addSearchHistory(query) {
+      let history = getSearchHistory().filter(q => q !== query);
+      history.unshift(query);
+      if (history.length > 10) history = history.slice(0, 10);
+      localStorage.setItem(userKey("searchHistory"), JSON.stringify(history));
+    }
+    function renderSearchHistory() {
+      const history = getSearchHistory();
+      const wrap = $("searchHistoryWrap");
+      const container = $("searchHistory");
+      if (!history.length) { wrap.classList.add("hidden"); return; }
+      wrap.classList.remove("hidden");
+      container.innerHTML = "";
+      history.forEach(q => {
+        const chip = document.createElement("button");
+        chip.className = "search-history-chip";
+        chip.innerHTML = `${q}<span class="sh-remove">&times;</span>`;
+        chip.onclick = (e) => {
+          if (e.target.classList.contains("sh-remove")) {
+            const updated = getSearchHistory().filter(h => h !== q);
+            localStorage.setItem(userKey("searchHistory"), JSON.stringify(updated));
+            renderSearchHistory();
+            return;
+          }
+          dom.searchInput.value = q;
+          dom.searchClear.classList.remove("hidden");
+          switchPage("search");
+          doSearch(q);
+        };
+        container.appendChild(chip);
+      });
+    }
+
+    // ── SLEEP TIMER ──
+    let sleepTimerId = null;
+    let sleepEndTime = null;
+    function setSleepTimer(minutes) {
+      clearTimeout(sleepTimerId);
+      if (!minutes) { sleepTimerId = null; sleepEndTime = null; toast("Sleep timer off"); return; }
+      sleepEndTime = Date.now() + minutes * 60000;
+      sleepTimerId = setTimeout(() => {
+        audio.pause();
+        updatePlayBtn(false);
+        toast("Sleep timer — goodnight!");
+        sleepTimerId = null;
+        sleepEndTime = null;
+      }, minutes * 60000);
+      toast(`Sleep timer: ${minutes} min`);
+    }
+    function showSleepMenu(anchorEl) {
+      const menu = $("sleepMenu");
+      menu.innerHTML = "";
+      [15, 30, 45, 60, 90].forEach(m => {
+        const btn = document.createElement("button");
+        btn.textContent = `${m} minutes`;
+        if (sleepEndTime) btn.classList.toggle("active-timer", false);
+        btn.onclick = () => { setSleepTimer(m); menu.classList.add("hidden"); };
+        menu.appendChild(btn);
+      });
+      if (sleepTimerId) {
+        const off = document.createElement("button");
+        off.textContent = "Turn off";
+        off.style.color = "var(--error)";
+        off.onclick = () => { setSleepTimer(0); menu.classList.add("hidden"); };
+        menu.appendChild(off);
+      }
+      const rect = anchorEl.getBoundingClientRect();
+      menu.style.left = Math.min(rect.left, window.innerWidth - 200) + "px";
+      menu.style.top = (rect.bottom + 8) + "px";
+      menu.classList.remove("hidden");
+      setTimeout(() => {
+        const handler = () => { menu.classList.add("hidden"); document.removeEventListener("click", handler); };
+        document.addEventListener("click", handler);
+      }, 50);
+    }
+    $("npSleepBtn").onclick = (e) => { e.stopPropagation(); showSleepMenu(e.currentTarget); };
+
+    // ── NOW PLAYING OVERLAY ──
+    function updateNowPlayingOverlay(song) {
+      $("npArt").src = song.image || "";
+      $("npTitle").textContent = song.title;
+      $("npArtist").textContent = song.artist;
+      $("npTotal").textContent = fmt(song.duration);
+      updateNpFav();
+      updateNpControls();
+    }
+    function updateNpFav() {
+      const song = currentSong();
+      const active = song && isFav(song.id);
+      $("npFavBtn").classList.toggle("is-active", !!active);
+      $("npFavBtn").innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${active ? "#ico-heart" : "#ico-heart-outline"}"/></svg> ${active ? "Liked" : "Like"}`;
+    }
+    function updateNpControls() {
+      $("npShuffle").classList.toggle("is-active", state.shuffleOn);
+      $("npRepeat").classList.toggle("is-active", state.repeatMode !== "off");
+      $("npRepeat").innerHTML = `<svg style="width:20px;height:20px;fill:currentColor"><use href="${state.repeatMode === 'one' ? '#ico-repeat-one' : '#ico-repeat'}"/></svg>`;
+      $("npPlayPause").innerHTML = `<svg style="width:24px;height:24px;fill:currentColor"><use href="${audio.paused ? '#ico-play' : '#ico-pause'}"/></svg>`;
+    }
+
+    function openNowPlaying() {
+      const overlay = $("nowPlayingOverlay");
+      overlay.classList.remove("hidden");
+      requestAnimationFrame(() => overlay.classList.add("visible"));
+    }
+    function closeNowPlaying() {
+      const overlay = $("nowPlayingOverlay");
+      overlay.classList.remove("visible");
+      setTimeout(() => overlay.classList.add("hidden"), 350);
+    }
+
+    // Now playing click handlers
+    $("npClose").onclick = closeNowPlaying;
+    $("npPlayPause").onclick = () => { if (audio.src) { audio.paused ? audio.play() : audio.pause(); } updateNpControls(); };
+    $("npNext").onclick = () => skipNext(true);
+    $("npPrev").onclick = () => skipPrev();
+    $("npShuffle").onclick = () => { toggleShuffle(); updateNpControls(); };
+    $("npRepeat").onclick = () => { cycleRepeat(); updateNpControls(); };
+    $("npFavBtn").onclick = () => { const s = currentSong(); if (s) toggleFav(s); updateNpFav(); };
+    $("npQueueBtn").onclick = () => { closeNowPlaying(); switchPage("queue"); };
+
+    // Now playing progress seek
+    $("npTrack").onclick = (e) => {
+      const rect = $("npTrack").getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      if (audio.duration) audio.currentTime = audio.duration * ratio;
+    };
+
+    // Open now playing by clicking player bar (song info area)
+    dom.nowTitle.onclick = openNowPlaying;
+    dom.nowArt.parentElement.onclick = openNowPlaying;
+
+    // Also update now playing on play/pause
+    audio.onplay = () => { updatePlayBtn(true); updateNpControls(); };
+    audio.onpause = () => { updatePlayBtn(false); updateNpControls(); };
+
+    // ── LYRICS ──
+    let currentLyricsId = null;
+    async function fetchLyrics(song) {
+      const lyricsText = $("npLyricsText");
+      currentLyricsId = song.id;
+      lyricsText.className = "lyrics-text loading";
+      lyricsText.textContent = "Loading lyrics...";
+      try {
+        const data = await apiFetch(`/songs/${song.id}/lyrics`);
+        if (currentLyricsId !== song.id) return;
+        if (data?.data?.lyrics) {
+          lyricsText.className = "lyrics-text";
+          lyricsText.innerHTML = data.data.lyrics;
+        } else {
+          lyricsText.className = "lyrics-text loading";
+          lyricsText.textContent = "No lyrics available for this song";
+        }
+      } catch {
+        if (currentLyricsId !== song.id) return;
+        lyricsText.className = "lyrics-text loading";
+        lyricsText.textContent = "No lyrics available for this song";
+      }
+    }
+    $("npLyricsToggle").onclick = () => {
+      const el = $("npLyrics");
+      el.classList.toggle("hidden");
+      $("npLyricsToggle").classList.toggle("is-active", !el.classList.contains("hidden"));
+    };
+
+    // ── DRAG-TO-SEEK (progress bar) ──
+    function addDragSeek(trackEl, fillEl, onChange) {
+      let dragging = false;
+      function update(e) {
+        const rect = trackEl.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        onChange(ratio);
+      }
+      trackEl.addEventListener("mousedown", (e) => { dragging = true; update(e); });
+      trackEl.addEventListener("touchstart", (e) => { dragging = true; update(e); }, { passive: true });
+      document.addEventListener("mousemove", (e) => { if (dragging) update(e); });
+      document.addEventListener("touchmove", (e) => { if (dragging) update(e); }, { passive: true });
+      document.addEventListener("mouseup", () => dragging = false);
+      document.addEventListener("touchend", () => dragging = false);
+    }
+
+    // Main progress bar drag
+    addDragSeek(dom.progressTrack, dom.progressFill, (ratio) => {
+      if (audio.duration) audio.currentTime = audio.duration * ratio;
+    });
+    // Now playing progress bar drag
+    addDragSeek($("npTrack"), $("npFill"), (ratio) => {
+      if (audio.duration) audio.currentTime = audio.duration * ratio;
+    });
+    // Volume bar drag
+    addDragSeek(dom.volumeTrack, dom.volumeFill, (ratio) => {
+      state.volume = ratio;
+      audio.volume = ratio;
+      dom.volumeFill.style.width = (ratio * 100) + "%";
+      dom.volBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${ratio === 0 ? '#ico-vol-mute' : '#ico-vol'}"/></svg>`;
+    });
+
+    // ── EQUALIZER BARS IN SONG ROWS ──
+    function refreshActiveSongRowsWithEq() {
+      document.querySelectorAll(".song-row").forEach(row => {
+        const numEl = row.querySelector(".row-num");
+        if (!numEl) return;
+        const title = row.querySelector(".row-title")?.textContent;
+        const cur = currentSong();
+        if (cur && cur.title === title && !audio.paused) {
+          if (!numEl.querySelector(".eq-bars")) {
+            numEl.innerHTML = '<div class="eq-bars"><span></span><span></span><span></span></div>';
+          }
+        } else {
+          const idx = numEl.dataset.idx;
+          if (numEl.querySelector(".eq-bars")) {
+            numEl.textContent = idx || "";
+          }
+        }
+      });
+    }
+    // Patch the original refreshActiveSongRows
+    const _origRefresh = refreshActiveSongRows;
+    refreshActiveSongRows = function() {
+      _origRefresh();
+      refreshActiveSongRowsWithEq();
+    };
+
+    // ── SHARED PLAYLISTS ──
+    function getSharedPlaylists() { return safeParse(localStorage.getItem("isai_shared_playlists"), []); }
+    function getSharedPlaylistSongs() { return safeParse(localStorage.getItem("isai_shared_playlistSongs"), {}); }
+    function saveSharedPlaylists(pls, songs) {
+      localStorage.setItem("isai_shared_playlists", JSON.stringify(pls));
+      localStorage.setItem("isai_shared_playlistSongs", JSON.stringify(songs));
+    }
+    function createSharedPlaylist(name) {
+      const pls = getSharedPlaylists();
+      const songs = getSharedPlaylistSongs();
+      const pl = { id: "spl_" + Date.now(), name, cover_song: null, shared: true, created_by: state.user?.email || "guest" };
+      pls.push(pl);
+      songs[pl.id] = [];
+      saveSharedPlaylists(pls, songs);
+      // Also add to user state for rendering
+      state.playlists.push(pl);
+      state.playlistSongs[pl.id] = [];
+      renderSidebarPlaylists();
+      return pl;
+    }
+    function loadSharedData() {
+      const sharedPls = getSharedPlaylists();
+      const sharedSongs = getSharedPlaylistSongs();
+      sharedPls.forEach(pl => {
+        if (!state.playlists.find(p => p.id === pl.id)) {
+          state.playlists.push(pl);
+          state.playlistSongs[pl.id] = sharedSongs[pl.id] || [];
+        }
+      });
+    }
+
+    // Patch playlist create modal to offer shared option
+    const _origPlSave = dom.plSave.onclick;
+    dom.plSave.onclick = () => {
+      const name = dom.plNameInput.value.trim();
+      if (!name) { dom.plModalMsg.textContent = "Enter a name"; return; }
+      const isShared = $("plSharedCheck")?.checked;
+      let pl;
+      if (isShared) {
+        pl = createSharedPlaylist(name);
+      } else {
+        pl = createPlaylist(name);
+      }
+      if (pl && state.pendingPlaylistSong) {
+        addSongToPlaylist(pl.id, state.pendingPlaylistSong);
+        // If shared, also save to shared storage
+        if (isShared) {
+          const sharedSongs = getSharedPlaylistSongs();
+          sharedSongs[pl.id] = state.playlistSongs[pl.id];
+          saveSharedPlaylists(getSharedPlaylists(), sharedSongs);
+        }
+      }
+      dom.playlistModal.classList.add("hidden");
+      toast(`Playlist "${name}" created${isShared ? " (shared)" : ""}`);
+    };
+
+    // Patch addSongToPlaylist to also update shared storage if shared
+    const _origAddSong = addSongToPlaylist;
+    addSongToPlaylist = function(plId, song) {
+      _origAddSong(plId, song);
+      const sharedPls = getSharedPlaylists();
+      if (sharedPls.find(p => p.id === plId)) {
+        const sharedSongs = getSharedPlaylistSongs();
+        sharedSongs[plId] = state.playlistSongs[plId];
+        saveSharedPlaylists(sharedPls, sharedSongs);
+      }
+    };
+
+    // ── QUEUE REORDER (drag & drop) ──
+    function renderQueueWithDrag() {
+      dom.queueList.innerHTML = "";
+      if (!state.currentQueue.length) {
+        dom.queueList.innerHTML = '<div class="empty-state"><h3>Queue is empty</h3><p>Add songs to your queue.</p></div>';
+        return;
+      }
+      state.currentQueue.forEach((song, i) => {
+        const row = makeSongRow(song, i, state.currentQueue);
+        // Add drag handle
+        const handle = document.createElement("span");
+        handle.className = "queue-drag-handle";
+        handle.textContent = "⠿";
+        handle.draggable = true;
+        row.prepend(handle);
+        row.style.gridTemplateColumns = "20px 16px 44px 1fr auto";
+        row.draggable = true;
+        row.dataset.queueIdx = i;
+
+        row.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", i);
+          row.classList.add("dragging");
+        });
+        row.addEventListener("dragend", () => row.classList.remove("dragging"));
+        row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("drag-over"); });
+        row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+        row.addEventListener("drop", (e) => {
+          e.preventDefault();
+          row.classList.remove("drag-over");
+          const from = parseInt(e.dataTransfer.getData("text/plain"));
+          const to = parseInt(row.dataset.queueIdx);
+          if (from === to) return;
+          const [moved] = state.currentQueue.splice(from, 1);
+          state.currentQueue.splice(to, 0, moved);
+          // Update currentIndex
+          if (state.currentIndex === from) state.currentIndex = to;
+          else if (from < state.currentIndex && to >= state.currentIndex) state.currentIndex--;
+          else if (from > state.currentIndex && to <= state.currentIndex) state.currentIndex++;
+          renderQueueWithDrag();
+        });
+
+        // Store index for eq bars
+        const numEl = row.querySelector(".row-num");
+        if (numEl) numEl.dataset.idx = i + 1;
+
+        dom.queueList.appendChild(row);
+      });
+    }
+    // Override renderQueue to use drag version
+    renderQueue = renderQueueWithDrag;
+
+    // ── STORE EQ INDEX IN MAKE SONG ROW ──
+    const _origMakeSongRow = makeSongRow;
+    makeSongRow = function(song, index, queue) {
+      const row = _origMakeSongRow(song, index, queue);
+      const numEl = row.querySelector(".row-num");
+      if (numEl) numEl.dataset.idx = index + 1;
+      return row;
+    };
+
+    // ── UPDATE SEARCH TO SAVE HISTORY ──
+    const _origSearchInput = dom.searchInput.oninput;
+    dom.searchInput.oninput = () => {
+      const v = dom.searchInput.value;
+      dom.searchClear.classList.toggle("hidden", !v);
+      if (v && state.currentPage !== "search") switchPage("search");
+      if (!v) renderSearchHistory();
+      doSearch(v);
+    };
+    dom.searchInput.onfocus = () => {
+      if (dom.searchInput.value) switchPage("search");
+      else renderSearchHistory();
+    };
+    // Save search on actual search execution
+    const _origDoSearch = doSearch;
+    doSearch = debounce(async (query) => {
+      if (!query.trim()) {
+        dom.searchResults.innerHTML = "";
+        $("searchEmpty").classList.remove("hidden");
+        renderSearchHistory();
+        return;
+      }
+      $("searchHistoryWrap").classList.add("hidden");
+      $("searchEmpty").classList.add("hidden");
+      const token = ++state.searchToken;
+      try {
+        const songs = await searchSongs(query);
+        if (token !== state.searchToken) return;
+        addSearchHistory(query);
+        renderSongList(dom.searchResults, songs, songs);
+      } catch {
+        if (token === state.searchToken) dom.searchResults.innerHTML = '<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>';
+      }
+    }, 400);
+
     // ── INIT ──
     (async () => {
       loadAuth();
@@ -2368,11 +3248,16 @@
 
       if (state.user) {
         loadUserData();
+        loadSharedData();
+        renderSidebarPlaylists();
       } else {
         renderFavorites();
         renderDownloads();
         renderSidebarPlaylists();
       }
+
+      renderRecentlyPlayed();
+      renderSearchHistory();
 
       await loadInitial();
     })();
