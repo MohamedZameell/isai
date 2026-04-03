@@ -1568,28 +1568,28 @@
 
       <!-- HOME PAGE -->
       <section id="homePage" class="page active">
-        <div id="homeChips" class="chips"></div>
+        <div id="homeGreeting" style="padding:24px 0 8px;">
+          <h2 style="font-size:1.8rem;font-weight:800;letter-spacing:-0.03em;" id="greetingText">Good evening</h2>
+        </div>
+
+        <!-- Recently Played Quick Cards -->
+        <div id="recentSection" class="hidden" style="margin-bottom:28px;">
+          <div id="recentGrid" class="recent-grid"></div>
+        </div>
 
         <div id="skeletonState">
-          <div class="skeleton skeleton-banner"></div>
-          <div class="skeleton-row"><div class="skeleton skeleton-art"></div><div style="flex:1;display:grid;gap:8px"><div class="skeleton skeleton-text w60"></div><div class="skeleton skeleton-text w40"></div></div></div>
-          <div class="skeleton-row"><div class="skeleton skeleton-art"></div><div style="flex:1;display:grid;gap:8px"><div class="skeleton skeleton-text w60"></div><div class="skeleton skeleton-text w40"></div></div></div>
-          <div class="skeleton-row"><div class="skeleton skeleton-art"></div><div style="flex:1;display:grid;gap:8px"><div class="skeleton skeleton-text w60"></div><div class="skeleton skeleton-text w40"></div></div></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px;">
+            <div class="skeleton" style="height:220px;border-radius:8px"></div>
+            <div class="skeleton" style="height:220px;border-radius:8px"></div>
+            <div class="skeleton" style="height:220px;border-radius:8px"></div>
+            <div class="skeleton" style="height:220px;border-radius:8px"></div>
+            <div class="skeleton" style="height:220px;border-radius:8px"></div>
+          </div>
         </div>
 
         <div id="homeContent" class="hidden">
-          <div id="recentSection" class="hidden" style="margin-bottom:24px;">
-            <div class="section-header"><h3>Recently Played</h3></div>
-            <div id="recentGrid" class="recent-grid"></div>
-          </div>
-
-          <div id="featuredBanner" class="featured-banner"></div>
-
-          <div class="section-header">
-            <h3 id="listTitle">Tracks</h3>
-            <span class="see-all" id="resultCount"></span>
-          </div>
-          <div id="songList" class="song-list"></div>
+          <!-- Dynamic sections rendered by JS -->
+          <div id="homeSections"></div>
         </div>
 
         <div id="errorState" class="hidden">
@@ -1599,6 +1599,13 @@
             <button class="btn-primary" id="retryBtn" style="margin-top:16px">Retry</button>
           </div>
         </div>
+
+        <!-- Hidden elements kept for compatibility -->
+        <div id="homeChips" class="hidden"></div>
+        <div id="featuredBanner" class="hidden"></div>
+        <div id="listTitle" class="hidden"></div>
+        <div id="resultCount" class="hidden"></div>
+        <div id="songList" class="hidden"></div>
       </section>
 
       <!-- SEARCH PAGE -->
@@ -2168,6 +2175,7 @@
     function makeSongRow(song, index, queue) {
       const row = document.createElement("div");
       row.className = `song-row${isCurrent(song) ? " active" : ""}`;
+      row.dataset.songId = song.id;
       row.innerHTML = `
         <span class="row-num" data-idx="${index + 1}">${index + 1}</span>
         <div class="row-art">${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : ""}</div>
@@ -2524,15 +2532,29 @@
       } else {
         toast("Downloading...");
         try {
-          const r = await fetch(song.src);
-          if (!r.ok) throw new Error();
-          const blob = await r.blob();
+          // Try fetch first, fall back to XHR for CORS issues
+          let blob;
+          try {
+            const r = await fetch(song.src, { mode: "cors" });
+            if (!r.ok) throw new Error();
+            blob = await r.blob();
+          } catch {
+            // Fallback: use XMLHttpRequest which handles redirects better
+            blob = await new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open("GET", song.src, true);
+              xhr.responseType = "blob";
+              xhr.onload = () => xhr.status === 200 ? resolve(xhr.response) : reject();
+              xhr.onerror = reject;
+              xhr.send();
+            });
+          }
           const key = `track-${song.id}`;
           await putBlob(key, blob);
           state.downloads.unshift({ ...song, blobKey: key });
           saveDlMeta();
           toast("Downloaded!");
-        } catch { toast("Download failed"); return; }
+        } catch { toast("Download failed — try playing first"); return; }
       }
       refreshActiveSongRows();
       if (state.currentPage === "downloads") renderDownloads();
@@ -2751,24 +2773,23 @@
 
     function refreshActiveSongRows() {
       document.querySelectorAll(".song-row").forEach(row => {
-        const title = row.querySelector(".row-title")?.textContent;
-        const song = [...state.songs, ...state.currentQueue, ...state.favorites.map(f=>f.song), ...state.downloads].find(s => s?.title === title);
-        if (song) {
-          const isActive = isCurrent(song);
-          row.classList.toggle("active", isActive);
-          const favBtn = row.querySelector('[data-act="fav"]');
-          if (favBtn) {
-            favBtn.classList.toggle("is-active", isFav(song.id));
-            favBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${isFav(song.id) ? "#ico-heart" : "#ico-heart-outline"}"/></svg>`;
-          }
-          // Equalizer bars
-          const numEl = row.querySelector(".row-num");
-          if (numEl) {
-            if (isActive && !audio.paused) {
-              numEl.innerHTML = '<div class="eq-bars"><span></span><span></span><span></span></div>';
-            } else {
-              numEl.textContent = numEl.dataset.idx || "";
-            }
+        const songId = row.dataset.songId;
+        if (!songId) return;
+        const cur = currentSong();
+        const isActive = cur && cur.id === songId;
+        row.classList.toggle("active", isActive);
+        const favBtn = row.querySelector('[data-act="fav"]');
+        if (favBtn) {
+          favBtn.classList.toggle("is-active", isFav(songId));
+          favBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${isFav(songId) ? "#ico-heart" : "#ico-heart-outline"}"/></svg>`;
+        }
+        // Equalizer bars
+        const numEl = row.querySelector(".row-num");
+        if (numEl) {
+          if (isActive && !audio.paused) {
+            numEl.innerHTML = '<div class="eq-bars"><span></span><span></span><span></span></div>';
+          } else {
+            numEl.textContent = numEl.dataset.idx || "";
           }
         }
       });
@@ -2779,17 +2800,140 @@
     function showHome() { dom.skeletonState.classList.add("hidden"); dom.homeContent.classList.remove("hidden"); dom.errorState.classList.add("hidden"); }
     function showError(msg) { dom.skeletonState.classList.add("hidden"); dom.homeContent.classList.add("hidden"); dom.errorState.classList.remove("hidden"); dom.errorMessage.textContent = msg; }
 
-    async function loadByChip(chip) {
-      showSkeleton();
+    // ── GREETING ──
+    function updateGreeting() {
+      const h = new Date().getHours();
+      const g = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+      $("greetingText").textContent = state.user ? `${g}, ${state.user.name}` : g;
+    }
+
+    // ── HOME: SPOTIFY-STYLE SECTIONS ──
+    const HOME_SECTIONS = [
+      { title: "Trending Now", queries: [
+        { type: "playlist", q: "chartbusters 2025 tamil" },
+        { type: "playlist", q: "chartbusters 2025 hindi" },
+        { type: "playlist", q: "top hits 2025 english" },
+        { type: "playlist", q: "global top hits 2025" },
+        { type: "playlist", q: "viral hits 2025" }
+      ]},
+      { title: "Tamil Hits", queries: [
+        { type: "playlist", q: "tamil hits 2025" },
+        { type: "playlist", q: "tamil melody songs" },
+        { type: "playlist", q: "tamil mass kuthu songs" },
+        { type: "playlist", q: "AR Rahman tamil hits" },
+        { type: "playlist", q: "Anirudh Ravichander songs" }
+      ]},
+      { title: "Bollywood & Hindi", queries: [
+        { type: "playlist", q: "bollywood hits 2025" },
+        { type: "playlist", q: "romantic hindi songs 2025" },
+        { type: "playlist", q: "arijit singh hits" },
+        { type: "playlist", q: "bollywood dance hits 2025" },
+        { type: "playlist", q: "hindi lofi chill" }
+      ]},
+      { title: "International", queries: [
+        { type: "playlist", q: "pop hits 2025" },
+        { type: "playlist", q: "hip hop rap 2025" },
+        { type: "playlist", q: "kpop hits 2025" },
+        { type: "playlist", q: "latin reggaeton 2025" },
+        { type: "playlist", q: "edm dance electronic 2025" }
+      ]},
+      { title: "Mood & Vibes", queries: [
+        { type: "playlist", q: "chill vibes relaxing" },
+        { type: "playlist", q: "workout gym motivation" },
+        { type: "playlist", q: "love songs romantic" },
+        { type: "playlist", q: "party songs 2025" },
+        { type: "playlist", q: "sad songs emotional" }
+      ]}
+    ];
+
+    async function fetchPlaylistCard(query) {
       try {
-        let songs;
-        if (chip.mode === "playlist") songs = await fetchPlaylist(chip.query);
-        else songs = await searchSongs(chip.query);
-        state.songs = songs;
-        renderBanner(songs[0], chip.feature);
-        dom.listTitle.textContent = chip.feature;
-        dom.resultCount.textContent = `${songs.length} songs`;
-        renderSongList(dom.songList, songs, songs);
+        const search = await apiFetch(`/search/playlists?query=${encodeURIComponent(query)}&limit=1`);
+        const result = search?.data?.results?.[0];
+        if (!result) return null;
+        const imgs = Array.isArray(result.image) ? result.image : [];
+        return {
+          id: result.id,
+          title: decode(result.name || result.title || query),
+          image: imgs.at(-1)?.url || imgs[0]?.url || "",
+          songCount: result.songCount || 0
+        };
+      } catch { return null; }
+    }
+
+    async function fetchAndPlayPlaylist(playlistId) {
+      try {
+        const pl = await apiFetch(`/playlists?id=${encodeURIComponent(playlistId)}`);
+        const songs = (pl?.data?.songs || []).map(normalizeSong).filter(s => s.src).map(enrichSong);
+        if (songs.length) {
+          state.songs = songs;
+          // Open in playlist view style
+          const plName = decode(pl?.data?.name || "Playlist");
+          const cover = songs[0]?.image || "";
+          dom.playlistViewHeader.innerHTML = `
+            <div style="display:flex;align-items:center;gap:24px;">
+              <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
+                ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+              </div>
+              <div>
+                <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Playlist</p>
+                <h2>${plName}</h2>
+                <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+              <button class="btn-primary" id="plViewPlay" style="padding:10px 32px;">Play</button>
+            </div>
+          `;
+          renderSongList(dom.playlistViewSongs, songs, songs);
+          switchPage("playlistView");
+          $("plViewPlay").onclick = () => playSongAt(0, songs);
+        }
+      } catch (err) {
+        toast("Failed to load playlist");
+      }
+    }
+
+    function renderHomeCard(item) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-art">
+          ${item.image ? `<img src="${item.image}" alt="${item.title}" loading="lazy">` : ""}
+          <div class="card-play"><svg><use href="#ico-play"/></svg></div>
+        </div>
+        <div class="card-title">${item.title}</div>
+        <div class="card-sub">${item.songCount ? item.songCount + " songs" : "Playlist"}</div>
+      `;
+      card.onclick = () => fetchAndPlayPlaylist(item.id);
+      return card;
+    }
+
+    async function loadHomeSections() {
+      showSkeleton();
+      updateGreeting();
+      const container = $("homeSections");
+      container.innerHTML = "";
+
+      // Load all sections in parallel
+      const sectionPromises = HOME_SECTIONS.map(async (section) => {
+        const cards = await Promise.all(section.queries.map(q => fetchPlaylistCard(q.q)));
+        return { title: section.title, cards: cards.filter(Boolean) };
+      });
+
+      try {
+        const sections = await Promise.all(sectionPromises);
+        sections.forEach(section => {
+          if (!section.cards.length) return;
+          const sectionEl = document.createElement("div");
+          sectionEl.style.marginBottom = "36px";
+          sectionEl.innerHTML = `<div class="section-header"><h3>${section.title}</h3></div>`;
+          const grid = document.createElement("div");
+          grid.className = "card-grid";
+          section.cards.forEach(item => grid.appendChild(renderHomeCard(item)));
+          sectionEl.appendChild(grid);
+          container.appendChild(sectionEl);
+        });
         showHome();
       } catch (err) {
         showError(err.message);
@@ -2797,8 +2941,7 @@
     }
 
     async function loadInitial(force = false) {
-      const chip = CHIPS.find(c => c.label === state.activeChip) || CHIPS[0];
-      await loadByChip(chip);
+      await loadHomeSections();
     }
 
     dom.retryBtn.onclick = () => loadInitial(true);
@@ -3176,7 +3319,7 @@
     (async () => {
       loadAuth();
       updateAuthUI();
-      renderChips();
+      updateGreeting();
 
       if (state.user) {
         loadUserData();
