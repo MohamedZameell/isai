@@ -349,6 +349,20 @@
 
     .topbar-actions button:hover { color: var(--text); transform: scale(1.05); }
 
+    .topbar-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      display: grid; place-items: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .topbar-avatar:hover { border-color: var(--text); transform: scale(1.05); }
+    .topbar-avatar.logged-in { background: var(--accent); color: #000; }
+
     /* ── CONTENT PAGES ── */
     .page { display: none; padding: 0 32px 32px; }
     .page.active { display: block; }
@@ -1551,6 +1565,110 @@
       text-overflow: ellipsis;
     }
 
+    /* ── SEARCH RESULTS LAYOUT ── */
+    .search-layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .search-top-result {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .search-top-result:hover { background: var(--bg-card-hover); }
+    .search-top-result .top-art {
+      width: 92px; height: 92px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .search-top-result .top-art img { width: 100%; height: 100%; object-fit: cover; }
+    .search-top-result .top-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .search-top-result .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+    }
+    .search-top-result .top-type {
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      background: rgba(255,255,255,0.1);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .search-top-result .top-play {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: grid; place-items: center;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      align-self: flex-end;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.2s;
+    }
+    .search-top-result:hover .top-play { opacity: 1; transform: translateY(0); }
+    .search-top-result .top-play svg { width: 20px; height: 20px; fill: #000; margin-left: 2px; }
+
+    .search-songs-col h4,
+    .search-albums-section h4 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .search-albums-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 768px) {
+      .search-layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .search-top-result .top-title { font-size: 1.4rem; }
+      .search-top-result .top-art { width: 72px; height: 72px; }
+      .search-top-result .top-play { opacity: 1; transform: translateY(0); width: 40px; height: 40px; }
+      .search-albums-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    }
+
+    /* ── LOGIN REQUIRED OVERLAY ── */
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      text-align: center;
+      padding: 24px;
+    }
+    .login-gate h2 { font-size: 1.5rem; font-weight: 800; }
+    .login-gate p { color: var(--text-sub); font-size: 0.95rem; max-width: 300px; }
+
     /* ── SEARCH HISTORY ── */
     .search-history {
       display: flex;
@@ -1774,6 +1892,9 @@
         </div>
         <div class="topbar-actions">
           <button id="topbarRefresh" title="Refresh">&#8635;</button>
+          <button class="topbar-avatar" id="topbarAuth" title="Profile">
+            <span id="topbarAvatarText">?</span>
+          </button>
         </div>
       </div>
 
@@ -2564,6 +2685,14 @@
 
     async function playSongAt(index, queue) {
       if (!queue?.length || !queue[index]) return;
+      if (!state.user) {
+        toast("Sign in to play music");
+        dom.emailInput.value = "";
+        $("passwordInput").value = "";
+        dom.authMessage.textContent = "";
+        dom.authModal.classList.remove("hidden");
+        return;
+      }
       const prevSrc = audio.dataset.blobUrl || "";
       if (prevSrc) URL.revokeObjectURL(prevSrc);
 
@@ -2916,25 +3045,64 @@
 
     // ── AUTH ──
     function updateAuthUI() {
+      const topAvatar = $("topbarAvatarText");
+      const topBtn = $("topbarAuth");
       if (state.user) {
         dom.userName.textContent = state.user.name;
         dom.userAvatar.textContent = state.user.name[0].toUpperCase();
+        topAvatar.textContent = state.user.name[0].toUpperCase();
+        topBtn.classList.add("logged-in");
+        // Remove login gate
+        const gate = $("loginGate");
+        if (gate) gate.remove();
       } else {
         dom.userName.textContent = "Sign in";
         dom.userAvatar.textContent = "?";
+        topAvatar.textContent = "?";
+        topBtn.classList.remove("logged-in");
+        showLoginGate();
       }
     }
 
-    dom.authTrigger.onclick = () => {
+    function showLoginGate() {
+      if ($("loginGate")) return;
+      const gate = document.createElement("div");
+      gate.className = "login-gate";
+      gate.id = "loginGate";
+      gate.innerHTML = `
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--accent);display:grid;place-items:center;margin-bottom:8px;">
+          <span style="font-size:2rem;font-weight:800;color:#000;">I</span>
+        </div>
+        <h2>Welcome to Isai</h2>
+        <p>Sign in to start listening to music</p>
+        <button class="btn-primary" id="loginGateBtn" style="margin-top:8px;padding:14px 48px;font-size:1rem;">Sign in</button>
+      `;
+      document.body.appendChild(gate);
+      $("loginGateBtn").onclick = () => {
+        dom.emailInput.value = "";
+        $("passwordInput").value = "";
+        dom.authMessage.textContent = "";
+        dom.authModal.classList.remove("hidden");
+      };
+    }
+
+    function handleAuthClick() {
       if (state.user) {
         if (confirm("Sign out?")) {
           state.user = null;
           saveAuth();
+          audio.pause();
+          audio.src = "";
           state.favorites = []; state.playlists = []; state.playlistSongs = []; state.downloads = [];
+          state.currentQueue = []; state.currentIndex = -1;
           updateAuthUI();
+          updatePlayBtn(false);
           renderSidebarPlaylists();
           renderFavorites();
           renderDownloads();
+          dom.nowTitle.textContent = "Isai";
+          dom.nowArtist.textContent = "Your music home";
+          dom.nowArt.src = "";
           toast("Signed out");
         }
       } else {
@@ -2943,7 +3111,10 @@
         dom.authMessage.textContent = "";
         dom.authModal.classList.remove("hidden");
       }
-    };
+    }
+
+    dom.authTrigger.onclick = handleAuthClick;
+    $("topbarAuth").onclick = handleAuthClick;
 
     dom.authSend.onclick = async () => {
       const email = dom.emailInput.value.trim().toLowerCase();
@@ -2967,9 +3138,83 @@
     $("passwordInput").addEventListener("keydown", (e) => { if (e.key === "Enter") dom.authSend.click(); });
     dom.emailInput.addEventListener("keydown", (e) => { if (e.key === "Enter") $("passwordInput").focus(); });
 
-    dom.authCancel.onclick = () => dom.authModal.classList.add("hidden");
+    dom.authCancel.onclick = () => {
+      // Only allow cancel if already logged in (e.g. switching accounts)
+      if (state.user) dom.authModal.classList.add("hidden");
+      else toast("Please sign in to continue");
+    };
 
-    // ── SEARCH ──
+    // ── SEARCH (Spotify-style: top result + albums + songs) ──
+    async function searchAll(query) {
+      const data = await apiFetch(`/search?query=${encodeURIComponent(query)}`);
+      return data?.data || {};
+    }
+
+    async function searchAlbums(query) {
+      const data = await apiFetch(`/search/albums?query=${encodeURIComponent(query)}&limit=10`);
+      return data?.data?.results || [];
+    }
+
+    async function fetchAlbumSongs(albumId) {
+      const data = await apiFetch(`/albums?id=${encodeURIComponent(albumId)}`);
+      return {
+        name: decode(data?.data?.name || "Album"),
+        image: (data?.data?.image || []).at(-1)?.url || "",
+        songs: (data?.data?.songs || []).map(normalizeSong).filter(s => s.src).map(enrichSong)
+      };
+    }
+
+    function renderSearchAlbumCard(album) {
+      const imgs = Array.isArray(album.image) ? album.image : [];
+      const img = imgs.at(-1)?.url || imgs[0]?.url || "";
+      const name = decode(album.name || album.title || "");
+      const artist = album.artists?.primary?.map(a => a.name).join(", ") || album.description || "";
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-art">
+          ${img ? `<img src="${img}" alt="${name}" loading="lazy">` : ""}
+          <div class="card-play"><svg><use href="#ico-play"/></svg></div>
+        </div>
+        <div class="card-title">${name}</div>
+        <div class="card-sub">${album.year || ""} ${artist ? "· " + artist : ""}</div>
+      `;
+      card.onclick = async () => {
+        toast("Loading album...");
+        try {
+          const album_data = await fetchAlbumSongs(album.id);
+          if (album_data.songs.length) {
+            dom.playlistViewHeader.innerHTML = `
+              <div style="display:flex;align-items:center;gap:24px;">
+                <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
+                  ${album_data.image ? `<img src="${album_data.image}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+                </div>
+                <div>
+                  <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Album</p>
+                  <h2>${album_data.name}</h2>
+                  <p style="color:var(--text-sub);font-size:0.85rem">${album_data.songs.length} songs</p>
+                </div>
+              </div>
+              <div class="pl-header-controls">
+                <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
+                <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+              </div>
+            `;
+            renderSongList(dom.playlistViewSongs, album_data.songs, album_data.songs);
+            switchPage("playlistView");
+            $("plViewPlay").onclick = () => playSongAt(0, album_data.songs);
+            $("plViewShuffle").onclick = () => {
+              const shuffled = [...album_data.songs];
+              for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+              state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
+              playSongAt(0, shuffled);
+            };
+          }
+        } catch { toast("Failed to load album"); }
+      };
+      return card;
+    }
+
     let doSearch = debounce(async (query) => {
       if (!query.trim()) {
         dom.searchResults.innerHTML = "";
@@ -2981,11 +3226,49 @@
       $("searchHistoryWrap").classList.add("hidden");
       $("searchEmpty").classList.add("hidden");
       const token = ++state.searchToken;
+      dom.searchResults.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-sub)">Searching...</div>';
+
       try {
-        const songs = await searchSongs(query);
+        // Fetch albums and songs in parallel
+        const [albums, songs] = await Promise.all([
+          searchAlbums(query),
+          searchSongs(query)
+        ]);
         if (token !== state.searchToken) return;
         addSearchHistory(query);
-        renderSongList(dom.searchResults, songs, songs);
+
+        dom.searchResults.innerHTML = "";
+
+        // Top result + songs side by side
+        if (albums.length || songs.length) {
+          const topItem = albums[0] || null;
+
+          // Albums section (movie/album cards)
+          if (albums.length) {
+            const albumSection = document.createElement("div");
+            albumSection.className = "search-albums-section";
+            albumSection.innerHTML = "<h4>Albums & Movies</h4>";
+            const albumGrid = document.createElement("div");
+            albumGrid.className = "search-albums-grid";
+            albums.slice(0, 8).forEach(a => albumGrid.appendChild(renderSearchAlbumCard(a)));
+            albumSection.appendChild(albumGrid);
+            dom.searchResults.appendChild(albumSection);
+          }
+
+          // Songs section
+          if (songs.length) {
+            const songsSection = document.createElement("div");
+            songsSection.className = "search-songs-col";
+            songsSection.innerHTML = "<h4>Songs</h4>";
+            const songsList = document.createElement("div");
+            songsList.className = "song-list";
+            songs.forEach((s, i) => songsList.appendChild(makeSongRow(s, i, songs)));
+            songsSection.appendChild(songsList);
+            dom.searchResults.appendChild(songsSection);
+          }
+        } else {
+          dom.searchResults.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>`;
+        }
       } catch {
         if (token === state.searchToken) dom.searchResults.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>`;
       }
