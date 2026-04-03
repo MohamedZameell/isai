@@ -516,9 +516,23 @@
       color: var(--text-sub);
       text-align: right;
       font-variant-numeric: tabular-nums;
+      position: relative;
     }
 
     .song-row.active .row-num { color: var(--accent); }
+
+    /* Show play icon on hover replacing number */
+    .song-row .row-num .hover-play {
+      display: none;
+      position: absolute;
+      inset: 0;
+      place-items: center;
+      color: var(--text);
+    }
+    .song-row:hover .row-num .num-text { display: none; }
+    .song-row:hover .row-num .hover-play { display: grid; }
+    .song-row.active:hover .row-num .eq-bars { display: none; }
+    .song-row.active:hover .row-num .hover-play { display: grid; color: var(--accent); }
 
     .song-row .row-art {
       width: 44px; height: 44px;
@@ -1100,13 +1114,31 @@
         left: 0; right: 0;
         height: var(--player-h);
         z-index: 46;
+        border-radius: 8px;
+        margin: 0 8px;
+        background: var(--bg-elevated);
+        border-top: none;
       }
 
       .player-center { display: none; }
       .player-right { display: none; }
 
-      .player-left .now-art { width: 42px; height: 42px; }
+      .player-left .now-art { width: 42px; height: 42px; border-radius: var(--radius-sm); }
       .player-left .now-actions { gap: 4px; }
+
+      /* Mobile mini controls */
+      .player-mobile-ctrls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .player-mobile-ctrls button {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: grid; place-items: center;
+        color: var(--text);
+        font-size: 1.1rem;
+      }
 
       .player-mobile-progress {
         position: absolute;
@@ -1385,7 +1417,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.07);
       border-radius: var(--radius-sm);
       overflow: hidden;
       cursor: pointer;
@@ -1435,6 +1467,72 @@
       transition: opacity 0.15s;
     }
     .search-history-chip:hover .sh-remove { opacity: 1; }
+
+    /* ── BROWSE CATEGORIES ── */
+    .browse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .browse-card {
+      position: relative;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      height: 100px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .browse-card:hover { transform: scale(1.02); }
+    .browse-card h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── PLAYLIST HEADER CONTROLS ── */
+    .pl-header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .pl-shuffle-play {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: grid; place-items: center;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      transition: all 0.15s;
+    }
+    .pl-shuffle-play:hover { transform: scale(1.06); background: var(--accent-hover); }
+    .pl-shuffle-play svg { width: 24px; height: 24px; fill: #000; margin-left: 2px; }
+
+    /* ── QUEUE NOW PLAYING SECTION ── */
+    .queue-now-playing {
+      padding: 0 0 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .queue-now-playing h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+    .queue-next h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
 
     /* ── QUEUE DRAG ── */
     .queue-drag-handle {
@@ -1616,9 +1714,9 @@
           <div id="searchHistory" class="search-history"></div>
         </div>
         <div id="searchResults" class="song-list"></div>
-        <div id="searchEmpty" class="empty-state hidden">
-          <h3>Search for songs</h3>
-          <p>Type a song name, artist, or album to get started.</p>
+        <div id="searchEmpty">
+          <div class="section-header" style="margin-top:8px"><h3>Browse All</h3></div>
+          <div id="browseCategories" class="browse-grid"></div>
         </div>
       </section>
 
@@ -1633,6 +1731,10 @@
             <h2>Liked Songs</h2>
             <p id="favCount" style="color:var(--text-sub);font-size:0.85rem">0 songs</p>
           </div>
+        </div>
+        <div class="pl-header-controls">
+          <button class="pl-shuffle-play" id="favShufflePlay" title="Shuffle play"><svg><use href="#ico-play"/></svg></button>
+          <button class="ctrl-btn" id="favShuffleToggle" title="Shuffle" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
         </div>
         <div id="favoritesList" class="song-list"></div>
       </section>
@@ -1680,6 +1782,11 @@
         <div class="now-actions">
           <button id="nowFavBtn" title="Like"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-heart-outline"/></svg></button>
         </div>
+      </div>
+      <!-- Mobile mini controls (visible only on mobile via CSS) -->
+      <div class="player-mobile-ctrls" id="playerMobileCtrls" style="display:none;">
+        <button id="mobPlayPause" title="Play/Pause"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-play"/></svg></button>
+        <button id="mobNextBtn" title="Next"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-next"/></svg></button>
       </div>
 
       <div class="player-center">
@@ -2177,7 +2284,7 @@
       row.className = `song-row${isCurrent(song) ? " active" : ""}`;
       row.dataset.songId = song.id;
       row.innerHTML = `
-        <span class="row-num" data-idx="${index + 1}">${index + 1}</span>
+        <span class="row-num" data-idx="${index + 1}"><span class="num-text">${index + 1}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span></span>
         <div class="row-art">${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : ""}</div>
         <div class="row-info">
           <div class="row-title">${song.title}</div>
@@ -2255,15 +2362,24 @@
             <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs</p>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="btn-primary" id="plViewPlay" style="padding:10px 32px;">Play</button>
-          <button class="btn-ghost" id="plViewDelete" style="color:var(--text-sub);font-size:0.85rem;">Delete playlist</button>
+        <div class="pl-header-controls">
+          <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
+          <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+          <div style="flex:1"></div>
+          <button class="ctrl-btn" id="plViewDelete" title="Delete playlist" style="opacity:1;color:var(--text-sub)"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-more"/></svg></button>
         </div>
       `;
       renderSongList(dom.playlistViewSongs, songs, songs);
       switchPage("playlistView");
 
       $("plViewPlay").onclick = () => { if (songs.length) playSongAt(0, songs); };
+      $("plViewShuffle").onclick = () => {
+        if (!songs.length) return;
+        const shuffled = [...songs];
+        for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+        state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
+        playSongAt(0, shuffled);
+      };
       $("plViewDelete").onclick = async () => {
         if (confirm(`Delete "${pl.name}"?`)) {
           await deletePlaylist(pl.id);
@@ -2476,9 +2592,27 @@
     dom.shuffleBtn.onclick = toggleShuffle;
     dom.repeatBtn.onclick = cycleRepeat;
 
-    // Mobile progress bar
-    if (window.innerWidth <= 768) dom.mobileProgress.style.display = "block";
-    window.addEventListener("resize", () => { dom.mobileProgress.style.display = window.innerWidth <= 768 ? "block" : "none"; });
+    // Mobile progress bar & mini controls
+    function updateMobileUI() {
+      const isMobile = window.innerWidth <= 768;
+      dom.mobileProgress.style.display = isMobile ? "block" : "none";
+      $("playerMobileCtrls").style.display = isMobile ? "flex" : "none";
+    }
+    updateMobileUI();
+    window.addEventListener("resize", updateMobileUI);
+
+    // Mobile mini play/pause
+    $("mobPlayPause").onclick = (e) => {
+      e.stopPropagation();
+      if (audio.src) { audio.paused ? audio.play() : audio.pause(); }
+      else if (state.songs.length) playSongAt(0, state.songs);
+    };
+    $("mobNextBtn").onclick = (e) => { e.stopPropagation(); skipNext(true); };
+
+    // Update mobile play button on play/pause
+    function updateMobPlayBtn(playing) {
+      $("mobPlayPause").innerHTML = `<svg style="width:20px;height:20px;fill:currentColor"><use href="${playing ? '#ico-pause' : '#ico-play'}"/></svg>`;
+    }
 
     // MediaSession
     if ("mediaSession" in navigator) {
@@ -2725,6 +2859,7 @@
         dom.searchResults.innerHTML = "";
         $("searchEmpty").classList.remove("hidden");
         renderSearchHistory();
+        renderBrowseCategories();
         return;
       }
       $("searchHistoryWrap").classList.add("hidden");
@@ -2786,10 +2921,11 @@
         // Equalizer bars
         const numEl = row.querySelector(".row-num");
         if (numEl) {
+          const idx = numEl.dataset.idx || "";
           if (isActive && !audio.paused) {
-            numEl.innerHTML = '<div class="eq-bars"><span></span><span></span><span></span></div>';
+            numEl.innerHTML = `<div class="eq-bars"><span></span><span></span><span></span></div><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
           } else {
-            numEl.textContent = numEl.dataset.idx || "";
+            numEl.innerHTML = `<span class="num-text">${idx}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
           }
         }
       });
@@ -2881,13 +3017,20 @@
                 <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs</p>
               </div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:16px;">
-              <button class="btn-primary" id="plViewPlay" style="padding:10px 32px;">Play</button>
+            <div class="pl-header-controls">
+              <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
+              <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
             </div>
           `;
           renderSongList(dom.playlistViewSongs, songs, songs);
           switchPage("playlistView");
           $("plViewPlay").onclick = () => playSongAt(0, songs);
+          $("plViewShuffle").onclick = () => {
+            const shuffled = [...songs];
+            for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+            state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
+            playSongAt(0, shuffled);
+          };
         }
       } catch (err) {
         toast("Failed to load playlist");
@@ -3165,8 +3308,8 @@
     dom.nowArt.parentElement.onclick = openNowPlaying;
 
     // Also update now playing on play/pause
-    audio.onplay = () => { updatePlayBtn(true); updateNpControls(); };
-    audio.onpause = () => { updatePlayBtn(false); updateNpControls(); };
+    audio.onplay = () => { updatePlayBtn(true); updateNpControls(); updateMobPlayBtn(true); refreshActiveSongRows(); };
+    audio.onpause = () => { updatePlayBtn(false); updateNpControls(); updateMobPlayBtn(false); refreshActiveSongRows(); };
 
     // ── LYRICS ──
     let currentLyricsId = null;
@@ -3311,9 +3454,122 @@
         dom.queueList.appendChild(row);
       });
     }
-    // Override renderQueue to use drag version
-    renderQueue = renderQueueWithDrag;
+    // Override renderQueue to use drag version with Now Playing section
+    renderQueue = function() {
+      dom.queueList.innerHTML = "";
+      if (!state.currentQueue.length) {
+        dom.queueList.innerHTML = '<div class="empty-state"><h3>Queue is empty</h3><p>Add songs to your queue.</p></div>';
+        return;
+      }
+      const cur = currentSong();
+      // Now Playing section
+      if (cur) {
+        const npSection = document.createElement("div");
+        npSection.className = "queue-now-playing";
+        npSection.innerHTML = "<h4>Now Playing</h4>";
+        const npRow = makeSongRow(cur, state.currentIndex, state.currentQueue);
+        npSection.appendChild(npRow);
+        dom.queueList.appendChild(npSection);
+      }
+      // Next in Queue
+      const upcoming = state.currentQueue.filter((_, i) => i > state.currentIndex);
+      if (upcoming.length) {
+        const nextSection = document.createElement("div");
+        nextSection.className = "queue-next";
+        nextSection.innerHTML = "<h4>Next in Queue</h4>";
+        upcoming.forEach((song, i) => {
+          const realIndex = state.currentIndex + 1 + i;
+          const row = makeSongRow(song, realIndex, state.currentQueue);
+          // Drag handle
+          const handle = document.createElement("span");
+          handle.className = "queue-drag-handle";
+          handle.textContent = "\u2807";
+          handle.draggable = true;
+          row.prepend(handle);
+          row.style.gridTemplateColumns = "20px 16px 44px 1fr auto";
+          row.draggable = true;
+          row.dataset.queueIdx = realIndex;
+          row.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", realIndex); row.classList.add("dragging"); });
+          row.addEventListener("dragend", () => row.classList.remove("dragging"));
+          row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("drag-over"); });
+          row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+          row.addEventListener("drop", (e) => {
+            e.preventDefault(); row.classList.remove("drag-over");
+            const from = parseInt(e.dataTransfer.getData("text/plain"));
+            const to = parseInt(row.dataset.queueIdx);
+            if (from === to) return;
+            const [moved] = state.currentQueue.splice(from, 1);
+            state.currentQueue.splice(to, 0, moved);
+            if (state.currentIndex === from) state.currentIndex = to;
+            else if (from < state.currentIndex && to >= state.currentIndex) state.currentIndex--;
+            else if (from > state.currentIndex && to <= state.currentIndex) state.currentIndex++;
+            renderQueue();
+          });
+          nextSection.appendChild(row);
+        });
+        dom.queueList.appendChild(nextSection);
+      }
+    };
 
+    // ── BROWSE CATEGORIES ──
+    const BROWSE_CATS = [
+      { label: "Tamil", q: "tamil hits 2025", color: "#E13300" },
+      { label: "Pop", q: "pop hits 2025", color: "#8400E7" },
+      { label: "Hip-Hop", q: "hip hop rap 2025", color: "#BA5D07" },
+      { label: "Bollywood", q: "bollywood hits 2025", color: "#E8115B" },
+      { label: "K-Pop", q: "kpop hits 2025", color: "#148A08" },
+      { label: "Romance", q: "love songs romantic", color: "#D84000" },
+      { label: "EDM", q: "edm dance electronic 2025", color: "#0D73EC" },
+      { label: "Chill", q: "chill vibes relaxing", color: "#537AA1" },
+      { label: "Workout", q: "workout gym motivation", color: "#1E3264" },
+      { label: "R&B", q: "rnb soul songs 2025", color: "#DC148C" },
+      { label: "Rock", q: "top rock songs 2025", color: "#E91429" },
+      { label: "Latin", q: "latin reggaeton 2025", color: "#477D95" },
+      { label: "Arabic", q: "arabic top songs 2025", color: "#509BF5" },
+      { label: "Afrobeats", q: "afrobeats top songs 2025", color: "#A56752" },
+      { label: "Jazz", q: "jazz songs classics", color: "#2D46B9" },
+      { label: "Party", q: "party songs 2025", color: "#E1118C" },
+      { label: "Sad", q: "sad songs emotional", color: "#608108" },
+      { label: "90s", q: "90s hits songs", color: "#7358FF" },
+      { label: "Anirudh", q: "Anirudh Ravichander songs", color: "#E13300" },
+      { label: "A.R. Rahman", q: "AR Rahman hits", color: "#0D73EC" },
+      { label: "Arijit Singh", q: "arijit singh hits", color: "#8400E7" },
+      { label: "Lofi", q: "lofi chill beats", color: "#503750" },
+      { label: "Devotional", q: "devotional songs", color: "#FF6437" },
+      { label: "Classical", q: "classical music carnatic", color: "#2D46B9" }
+    ];
+
+    function renderBrowseCategories() {
+      const grid = $("browseCategories");
+      if (!grid) return;
+      grid.innerHTML = "";
+      BROWSE_CATS.forEach(cat => {
+        const card = document.createElement("div");
+        card.className = "browse-card";
+        card.style.background = cat.color;
+        card.innerHTML = `<h4>${cat.label}</h4>`;
+        card.onclick = () => {
+          dom.searchInput.value = cat.q;
+          dom.searchClear.classList.remove("hidden");
+          switchPage("search");
+          doSearch(cat.q);
+        };
+        grid.appendChild(card);
+      });
+    }
+
+    // ── FAVORITES SHUFFLE PLAY ──
+    $("favShufflePlay").onclick = () => {
+      const songs = state.favorites.map(f => enrichSong(f.song));
+      if (!songs.length) { toast("No liked songs yet"); return; }
+      // Shuffle the songs
+      const shuffled = [...songs];
+      for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+      state.shuffleOn = true;
+      dom.shuffleBtn.classList.add("is-active");
+      playSongAt(0, shuffled);
+    };
+    $("favShuffleToggle").onclick = () => toggleShuffle();
 
     // ── INIT ──
     (async () => {
@@ -3333,6 +3589,7 @@
 
       renderRecentlyPlayed();
       renderSearchHistory();
+      renderBrowseCategories();
 
       await loadInitial();
     })();
