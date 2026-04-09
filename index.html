@@ -349,20 +349,6 @@
 
     .topbar-actions button:hover { color: var(--text); transform: scale(1.05); }
 
-    .topbar-avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--bg-elevated);
-      display: grid; place-items: center;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text);
-      border: 1px solid transparent;
-      transition: all 0.15s;
-    }
-    .topbar-avatar:hover { border-color: var(--text); transform: scale(1.05); }
-    .topbar-avatar.logged-in { background: var(--accent); color: #000; }
-
     /* ── CONTENT PAGES ── */
     .page { display: none; padding: 0 32px 32px; }
     .page.active { display: block; }
@@ -1565,248 +1551,6 @@
       text-overflow: ellipsis;
     }
 
-    /* ── SEARCH RESULTS LAYOUT ── */
-    .search-layout {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-    .search-top-result {
-      background: var(--bg-card);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .search-top-result:hover { background: var(--bg-card-hover); }
-    .search-top-result .top-art {
-      width: 92px; height: 92px;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    }
-    .search-top-result .top-art img { width: 100%; height: 100%; object-fit: cover; }
-    .search-top-result .top-title {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .search-top-result .top-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-sub);
-      font-size: 0.85rem;
-    }
-    .search-top-result .top-type {
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      background: rgba(255,255,255,0.1);
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .search-top-result .top-play {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: grid; place-items: center;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-      align-self: flex-end;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: all 0.2s;
-    }
-    .search-top-result:hover .top-play { opacity: 1; transform: translateY(0); }
-    .search-top-result .top-play svg { width: 20px; height: 20px; fill: #000; margin-left: 2px; }
-
-    .search-songs-col h4,
-    .search-albums-section h4 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .search-albums-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-
-    @media (max-width: 768px) {
-      .search-layout {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-      .search-top-result .top-title { font-size: 1.4rem; }
-      .search-top-result .top-art { width: 72px; height: 72px; }
-      .search-top-result .top-play { opacity: 1; transform: translateY(0); width: 40px; height: 40px; }
-      .search-albums-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-    }
-
-    /* ── LOGIN REQUIRED OVERLAY ── */
-    .login-gate {
-      position: fixed;
-      inset: 0;
-      z-index: 90;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      text-align: center;
-      padding: 24px;
-    }
-    .login-gate h2 { font-size: 1.5rem; font-weight: 800; }
-    .login-gate p { color: var(--text-sub); font-size: 0.95rem; max-width: 300px; }
-
-    /* ── ARTIST PAGE ── */
-    .artist-header {
-      display: flex;
-      align-items: flex-end;
-      gap: 24px;
-      padding: 40px 0 24px;
-    }
-    .artist-avatar {
-      width: 180px; height: 180px;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      flex-shrink: 0;
-      background: var(--bg-elevated);
-    }
-    .artist-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .artist-meta h1 {
-      font-size: 3rem;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1.1;
-    }
-    .artist-meta .artist-stats {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 8px;
-      color: var(--text-sub);
-      font-size: 0.85rem;
-    }
-    .artist-meta .verified-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--accent);
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-    .artist-bio {
-      color: var(--text-sub);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      max-width: 600px;
-      margin-bottom: 24px;
-    }
-
-    /* Artist cards in search (circular) */
-    .artist-search-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 20px;
-      margin-bottom: 28px;
-    }
-    .artist-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      border-radius: var(--radius-md);
-      background: var(--bg-card);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .artist-card:hover { background: var(--bg-card-hover); }
-    .artist-card .ac-img {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 50%;
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      background: var(--bg-elevated);
-    }
-    .artist-card .ac-img img { width: 100%; height: 100%; object-fit: cover; }
-    .artist-card .ac-name {
-      font-size: 0.9rem;
-      font-weight: 600;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-    }
-    .artist-card .ac-type {
-      font-size: 0.75rem;
-      color: var(--text-sub);
-    }
-
-    /* Clickable artist names */
-    .artist-link {
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-    .artist-link:hover {
-      color: var(--accent);
-      text-decoration: underline;
-    }
-
-    /* Artist page sections */
-    .artist-section {
-      margin-bottom: 32px;
-    }
-    .artist-section h3 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-
-    /* Play count in song row */
-    .row-plays {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    /* Auto-play indicator */
-    .autoplay-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      background: rgba(29,185,84,0.15);
-      color: var(--accent);
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    @media (max-width: 768px) {
-      .artist-header { flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 24px 0 16px; }
-      .artist-avatar { width: 120px; height: 120px; }
-      .artist-meta h1 { font-size: 1.8rem; }
-      .artist-meta .artist-stats { justify-content: center; flex-wrap: wrap; }
-      .artist-search-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
-      .artist-card { padding: 12px; }
-      .artist-card .ac-name { font-size: 0.8rem; }
-    }
-
     /* ── SEARCH HISTORY ── */
     .search-history {
       display: flex;
@@ -1982,10 +1726,8 @@
 
       <div class="sidebar-library-header">
         <h3>Your Library</h3>
-        <button id="sidebarImportSpotify" title="Import Spotify playlists" style="background:none;border:none;color:var(--text-sub);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:var(--radius-full);">&#8615;</button>
         <button id="sidebarCreatePlaylist" title="Create playlist">+</button>
       </div>
-      <input type="file" id="spotifyImportInput" accept=".csv" multiple style="display:none">
 
       <div class="sidebar-playlists" id="sidebarPlaylists">
         <button class="sidebar-playlist-item" data-page="favorites">
@@ -2032,9 +1774,6 @@
         </div>
         <div class="topbar-actions">
           <button id="topbarRefresh" title="Refresh">&#8635;</button>
-          <button class="topbar-avatar" id="topbarAuth" title="Profile">
-            <span id="topbarAvatarText">?</span>
-          </button>
         </div>
       </div>
 
@@ -2139,13 +1878,6 @@
         <div class="page-header"><h2>Queue</h2><p>Next in your listening session</p></div>
         <div id="queueList" class="song-list"></div>
       </section>
-
-      <!-- ARTIST PAGE -->
-      <section id="artistPage" class="page">
-        <div id="artistHeader" class="artist-header"></div>
-        <div class="pl-header-controls" id="artistControls" style="margin-bottom:24px"></div>
-        <div id="artistContent"></div>
-      </section>
     </div>
 
     <!-- ── PLAYER BAR ── -->
@@ -2245,17 +1977,6 @@
     </div>
   </div>
 
-  <!-- SPOTIFY IMPORT MODAL -->
-  <div class="modal-overlay hidden" id="spotifyImportModal">
-    <div class="modal" style="max-width:420px">
-      <h3>Import Spotify Playlists</h3>
-      <div id="importProgress" style="font-size:0.85rem;color:var(--text-sub);max-height:300px;overflow-y:auto;"></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="importClose">Close</button>
-      </div>
-    </div>
-  </div>
-
   <!-- CONTEXT MENU -->
   <div class="context-menu hidden" id="contextMenu"></div>
 
@@ -2336,33 +2057,30 @@
     const CACHE_KEY = "isai_cache_v3";
     const AUTH_KEY = "isai_auth_v1";
     const CACHE_TTL = 3600000;
-    const CURRENT_YEAR = new Date().getFullYear();
-    const HOME_SECTIONS_CACHE_KEY = "isai_home_sections_v1";
-    const HOME_SECTIONS_INITIAL_COUNT = 3;
 
     function userKey(key) { return state.user ? `isai_${state.user.email}_${key}` : `isai_guest_${key}`; }
 
     const CHIPS = [
       // ── Tamil ──
-      { label: "Trending", mode: "playlist", query: `tamil hits ${CURRENT_YEAR}`, feature: "Trending Now" },
-      { label: "New Releases", mode: "search", query: `new tamil songs ${CURRENT_YEAR}`, feature: "Fresh Drops" },
+      { label: "Trending", mode: "playlist", query: "tamil hits 2025", feature: "Trending Now" },
+      { label: "New Releases", mode: "search", query: "new tamil songs 2025", feature: "Fresh Drops" },
       { label: "Melody", mode: "search", query: "tamil melody songs", feature: "Soft Melodies" },
       { label: "Mass", mode: "search", query: "tamil mass kuthu songs", feature: "Maximum Energy" },
       { label: "A.R. Rahman", mode: "search", query: "AR Rahman tamil hits", feature: "The Mozart" },
       { label: "Anirudh", mode: "search", query: "Anirudh Ravichander songs", feature: "Rockstar" },
       // ── International ──
-      { label: "Global Top", mode: "playlist", query: `global top hits ${CURRENT_YEAR}`, feature: "Global Top Hits" },
-      { label: "Pop", mode: "search", query: `top pop songs ${CURRENT_YEAR}`, feature: "Pop Hits" },
-      { label: "Hip-Hop", mode: "search", query: `top hip hop rap songs ${CURRENT_YEAR}`, feature: "Hip-Hop Bangers" },
-      { label: "K-Pop", mode: "search", query: `kpop hits ${CURRENT_YEAR}`, feature: "K-Pop Wave" },
-      { label: "Latin", mode: "search", query: `top latin reggaeton songs ${CURRENT_YEAR}`, feature: "Latin Fire" },
-      { label: "Bollywood", mode: "search", query: `bollywood hindi hits ${CURRENT_YEAR}`, feature: "Bollywood Vibes" },
-      { label: "EDM", mode: "search", query: `edm dance electronic songs ${CURRENT_YEAR}`, feature: "Electronic Beats" },
-      { label: "R&B", mode: "search", query: `rnb soul songs ${CURRENT_YEAR}`, feature: "R&B Soul" },
-      { label: "Rock", mode: "search", query: `top rock songs ${CURRENT_YEAR}`, feature: "Rock Anthems" },
+      { label: "Global Top", mode: "playlist", query: "global top hits 2025", feature: "Global Top Hits" },
+      { label: "Pop", mode: "search", query: "top pop songs 2025", feature: "Pop Hits" },
+      { label: "Hip-Hop", mode: "search", query: "top hip hop rap songs 2025", feature: "Hip-Hop Bangers" },
+      { label: "K-Pop", mode: "search", query: "kpop hits 2025", feature: "K-Pop Wave" },
+      { label: "Latin", mode: "search", query: "top latin reggaeton songs 2025", feature: "Latin Fire" },
+      { label: "Bollywood", mode: "search", query: "bollywood hindi hits 2025", feature: "Bollywood Vibes" },
+      { label: "EDM", mode: "search", query: "edm dance electronic songs 2025", feature: "Electronic Beats" },
+      { label: "R&B", mode: "search", query: "rnb soul songs 2025", feature: "R&B Soul" },
+      { label: "Rock", mode: "search", query: "top rock songs 2025", feature: "Rock Anthems" },
       { label: "Jazz", mode: "search", query: "jazz songs classics", feature: "Jazz Classics" },
-      { label: "Arabic", mode: "search", query: `arabic top songs ${CURRENT_YEAR}`, feature: "Arabic Hits" },
-      { label: "Afrobeats", mode: "search", query: `afrobeats top songs ${CURRENT_YEAR}`, feature: "Afrobeats Pulse" },
+      { label: "Arabic", mode: "search", query: "arabic top songs 2025", feature: "Arabic Hits" },
+      { label: "Afrobeats", mode: "search", query: "afrobeats top songs 2025", feature: "Afrobeats Pulse" },
       { label: "Love", mode: "search", query: "love songs romantic hits", feature: "Romantic Vibes" },
       { label: "90s Hits", mode: "search", query: "90s hits songs", feature: "Classic Era" }
     ];
@@ -2463,13 +2181,10 @@
       return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
     }
 
-    const decodeEl = document.createElement("textarea");
     function decode(s) {
-      if (!s) return "";
-      const text = String(s);
-      if (!/[<&]/.test(text)) return text;
-      decodeEl.innerHTML = text;
-      return decodeEl.value;
+      const t = document.createElement("textarea");
+      t.innerHTML = s || "";
+      return t.value;
     }
 
     function safeParse(val, fallback) {
@@ -2485,187 +2200,6 @@
       dom.toast.textContent = msg;
       dom.toast.classList.add("show");
       setTimeout(() => dom.toast.classList.remove("show"), 2500);
-    }
-
-    function clearChildren(el) {
-      el.textContent = "";
-      return el;
-    }
-
-    function makeSvgIcon(href, size = 16) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.style.width = `${size}px`;
-      svg.style.height = `${size}px`;
-      svg.style.fill = "currentColor";
-      const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-      use.setAttribute("href", href);
-      svg.appendChild(use);
-      return svg;
-    }
-
-    function setButtonIcon(btn, href, size = 16) {
-      clearChildren(btn);
-      btn.appendChild(makeSvgIcon(href, size));
-    }
-
-    function appendArtistLinks(container, artists, fallbackText, onClick) {
-      clearChildren(container);
-      if (artists?.length) {
-        artists.forEach((artist, index) => {
-          if (index) container.append(", ");
-          const link = document.createElement("span");
-          link.className = "artist-link";
-          link.dataset.artistId = artist.id;
-          link.textContent = artist.name;
-          link.onclick = (e) => onClick?.(e, artist.id);
-          container.appendChild(link);
-        });
-        return;
-      }
-      container.textContent = fallbackText;
-    }
-
-    function htmlToPlainText(html) {
-      if (!html) return "";
-      const doc = new DOMParser().parseFromString(String(html), "text/html");
-      const parts = [];
-      const blockTags = new Set(["P", "DIV", "LI", "UL", "OL", "SECTION", "ARTICLE", "H1", "H2", "H3", "H4", "H5", "H6"]);
-      function walk(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-          parts.push(node.textContent || "");
-          return;
-        }
-        if (node.nodeType !== Node.ELEMENT_NODE) return;
-        if (node.tagName === "BR") {
-          parts.push("\n");
-          return;
-        }
-        const isBlock = blockTags.has(node.tagName);
-        if (isBlock && parts.length && !parts[parts.length - 1].endsWith("\n")) parts.push("\n");
-        node.childNodes.forEach(walk);
-        if (isBlock && parts.length && !parts[parts.length - 1].endsWith("\n")) parts.push("\n");
-      }
-      doc.body.childNodes.forEach(walk);
-      return parts.join("").replace(/\n{3,}/g, "\n\n").trim();
-    }
-
-    function makePlaylistHeader(kind, title, count, image) {
-      const wrapper = document.createElement("div");
-      wrapper.style.display = "flex";
-      wrapper.style.alignItems = "center";
-      wrapper.style.justifyContent = "space-between";
-      wrapper.style.gap = "24px";
-
-      const infoWrap = document.createElement("div");
-      infoWrap.style.display = "flex";
-      infoWrap.style.alignItems = "center";
-      infoWrap.style.gap = "24px";
-
-      const cover = document.createElement("div");
-      cover.style.width = "80px";
-      cover.style.height = "80px";
-      cover.style.borderRadius = "4px";
-      cover.style.background = "var(--bg-elevated)";
-      cover.style.overflow = "hidden";
-      if (image) {
-        const img = document.createElement("img");
-        img.src = image;
-        img.alt = "";
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "cover";
-        cover.appendChild(img);
-      }
-
-      const textWrap = document.createElement("div");
-      const kindEl = document.createElement("p");
-      kindEl.style.fontSize = "0.75rem";
-      kindEl.style.fontWeight = "600";
-      kindEl.style.textTransform = "uppercase";
-      kindEl.style.color = "var(--text-sub)";
-      kindEl.textContent = kind;
-      const titleEl = document.createElement("h2");
-      titleEl.textContent = title;
-      const countEl = document.createElement("p");
-      countEl.style.color = "var(--text-sub)";
-      countEl.style.fontSize = "0.85rem";
-      countEl.textContent = `${count} songs`;
-      textWrap.append(kindEl, titleEl, countEl);
-
-      infoWrap.append(cover, textWrap);
-
-      const controls = document.createElement("div");
-      controls.className = "pl-header-controls";
-      const playBtn = document.createElement("button");
-      playBtn.className = "pl-shuffle-play";
-      playBtn.title = "Play";
-      playBtn.appendChild(makeSvgIcon("#ico-play"));
-
-      const shuffleBtn = document.createElement("button");
-      shuffleBtn.className = "ctrl-btn";
-      shuffleBtn.title = "Shuffle play";
-      shuffleBtn.style.opacity = "1";
-      shuffleBtn.appendChild(makeSvgIcon("#ico-shuffle", 20));
-
-      controls.append(playBtn, shuffleBtn);
-      wrapper.append(infoWrap, controls);
-      return { element: wrapper, playBtn, shuffleBtn };
-    }
-
-    function renderStatusMessage(target, title, message, color = "var(--text-sub)") {
-      clearChildren(target);
-      const wrap = document.createElement("div");
-      wrap.style.textAlign = "center";
-      wrap.style.padding = "48px";
-      wrap.style.color = color;
-      const heading = document.createElement("h3");
-      heading.textContent = title;
-      const body = document.createElement("p");
-      body.textContent = message;
-      wrap.append(heading, body);
-      target.appendChild(wrap);
-    }
-
-    function makeHomeSectionPlaceholder(index) {
-      const placeholder = document.createElement("div");
-      placeholder.className = "home-section-placeholder";
-      placeholder.dataset.sectionIndex = index;
-      placeholder.style.marginBottom = "36px";
-
-      const header = document.createElement("div");
-      header.className = "section-header";
-      const headerSkeleton = document.createElement("div");
-      headerSkeleton.className = "skeleton skeleton-text";
-      headerSkeleton.style.width = "180px";
-      headerSkeleton.style.height = "24px";
-      header.appendChild(headerSkeleton);
-
-      const grid = document.createElement("div");
-      grid.className = "card-grid";
-      for (let i = 0; i < 4; i++) {
-        const card = document.createElement("div");
-        card.className = "card";
-        const art = document.createElement("div");
-        art.className = "skeleton";
-        art.style.width = "100%";
-        art.style.aspectRatio = "1";
-        art.style.borderRadius = "8px";
-        art.style.marginBottom = "16px";
-        const line1 = document.createElement("div");
-        line1.className = "skeleton skeleton-text";
-        line1.style.height = "14px";
-        line1.style.width = "72%";
-        line1.style.marginBottom = "8px";
-        const line2 = document.createElement("div");
-        line2.className = "skeleton skeleton-text";
-        line2.style.height = "12px";
-        line2.style.width = "48%";
-        card.append(art, line1, line2);
-        grid.appendChild(card);
-      }
-
-      placeholder.append(header, grid);
-      return placeholder;
     }
 
     // ── STORAGE (per-user localStorage) ──
@@ -2716,8 +2250,11 @@
     async function apiFetch(path) {
       for (let i = 0; i < API_ENDPOINTS.length; i++) {
         const base = API_ENDPOINTS[i];
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
         try {
-          const r = await fetch(`${base}${path}`, { signal: AbortSignal.timeout(8000) });
+          const r = await fetch(`${base}${path}`, { signal: ctrl.signal });
+          clearTimeout(timer);
           if (!r.ok) throw new Error(`API ${r.status}`);
           const data = await r.json();
           if (base !== API_BASE) {
@@ -2726,6 +2263,7 @@
           }
           return data;
         } catch (err) {
+          clearTimeout(timer);
           console.warn(`API failed (${base}):`, err.message);
           if (i === API_ENDPOINTS.length - 1) throw new Error("All APIs unavailable");
         }
@@ -2735,19 +2273,16 @@
     function normalizeSong(s) {
       const imgs = Array.isArray(s.image) ? s.image : [];
       const dls = Array.isArray(s.downloadUrl) ? s.downloadUrl : [];
-      const artistObjs = s.artists?.primary || [];
-      const artists = s.primaryArtists || artistObjs.map(a => a.name).join(", ") || s.artist || "Unknown";
+      const artists = s.primaryArtists || s.artists?.primary?.map(a => a.name).join(", ") || s.artist || "Unknown";
       return {
         id: s.id || `${s.name}-${artists}`,
         title: decode(s.name || s.title || "Untitled"),
         artist: decode(artists),
-        artistIds: artistObjs.map(a => ({ id: a.id, name: decode(a.name || "") })),
         duration: Number(s.duration) || 0,
-        image: imgs.at(-1)?.url || imgs[0]?.url || "",
-        src: dls.at(-1)?.url || "",
+        image: (imgs.length ? imgs[imgs.length - 1]?.url : "") || imgs[0]?.url || "",
+        src: (dls.length ? dls[dls.length - 1]?.url : "") || "",
         year: s.year || "",
-        album: decode(s.album?.name || s.album || ""),
-        playCount: Number(s.playCount) || 0
+        album: decode(s.album?.name || s.album || "")
       };
     }
 
@@ -2771,9 +2306,115 @@
       return songs;
     }
 
-    async function searchSongs(query) {
-      const d = await apiFetch(`/search/songs?query=${encodeURIComponent(query)}&limit=30`);
-      return (d?.data?.results || []).map(normalizeSong).filter(s => s.src).map(enrichSong);
+    async function searchAll(query) {
+      // Hit JioSaavn's autocomplete (/search) AND the full song search (/search/songs) in parallel.
+      // Autocomplete has the best relevance ordering (it's what the real JioSaavn app uses) but
+      // returns lightweight song stubs without downloadUrl. /search/songs returns full song objects
+      // with downloadUrl but its ranking is weaker on short queries. Merge: rank by autocomplete
+      // order, fill song data from /search/songs, fetch /songs/{id} for any top picks still missing.
+      // Also extract album results so movie/film queries return the soundtrack album as a top hit.
+      const [global, songsOnly] = await Promise.all([
+        apiFetch(`/search?query=${encodeURIComponent(query)}`).catch(() => null),
+        apiFetch(`/search/songs?query=${encodeURIComponent(query)}&limit=40`).catch(() => null)
+      ]);
+
+      // ── SONGS ──
+      const fullList = (songsOnly?.data?.results || []).map(normalizeSong).filter(s => s.src);
+      const fullById = new Map();
+      fullList.forEach(s => fullById.set(s.id, s));
+
+      const orderIds = [];
+      const seenSong = new Set();
+      const addSongId = (id) => { if (id && !seenSong.has(id)) { seenSong.add(id); orderIds.push(id); } };
+
+      const topQuery = global?.data?.topQuery?.results || [];
+      topQuery.filter(r => r.type === "song").forEach(r => addSongId(r.id));
+      const autoSongs = global?.data?.songs?.results || [];
+      autoSongs.forEach(r => addSongId(r.id));
+
+      // For the top picks that aren't in /search/songs results, fetch full song details directly.
+      // Cap at 5 to avoid request explosion on every keystroke.
+      const missingTop = orderIds.filter(id => !fullById.has(id)).slice(0, 5);
+      await Promise.all(missingTop.map(async (id) => {
+        try {
+          const r = await apiFetch(`/songs/${id}`);
+          const raw = Array.isArray(r?.data) ? r.data[0] : r?.data;
+          if (!raw) return;
+          const song = normalizeSong(raw);
+          if (song.src) fullById.set(song.id, song);
+        } catch {}
+      }));
+
+      const songs = [];
+      const usedSong = new Set();
+      for (const id of orderIds) {
+        const s = fullById.get(id);
+        if (s && !usedSong.has(s.id)) { songs.push(s); usedSong.add(s.id); }
+      }
+      for (const s of fullList) {
+        if (!usedSong.has(s.id)) { songs.push(s); usedSong.add(s.id); }
+      }
+
+      // ── ALBUMS (movies live here on JioSaavn — film soundtracks are albums) ──
+      // Rank by topQuery first (best match), then the albums section.
+      const albums = [];
+      const seenAlbum = new Set();
+      const addAlbum = (a) => {
+        if (!a?.id || seenAlbum.has(a.id)) return;
+        seenAlbum.add(a.id);
+        const imgs = Array.isArray(a.image) ? a.image : [];
+        albums.push({
+          id: a.id,
+          title: decode(a.title || a.name || ""),
+          image: (imgs.length ? imgs[imgs.length - 1]?.url : "") || imgs[0]?.url || "",
+          subtitle: decode(a.description || a.artist || a.year || "")
+        });
+      };
+      topQuery.filter(r => r.type === "album").forEach(addAlbum);
+      (global?.data?.albums?.results || []).forEach(addAlbum);
+
+      return { songs: songs.map(enrichSong), albums };
+    }
+
+    async function fetchAndPlayAlbum(albumId) {
+      try {
+        const al = await apiFetch(`/albums?id=${encodeURIComponent(albumId)}`);
+        const data = al?.data || {};
+        const songs = (data.songs || []).map(normalizeSong).filter(s => s.src).map(enrichSong);
+        if (!songs.length) { toast("No playable songs in album"); return; }
+        state.songs = songs;
+        const imgs = Array.isArray(data.image) ? data.image : [];
+        const cover = (imgs.length ? imgs[imgs.length - 1]?.url : "") || songs[0]?.image || "";
+        const name = decode(data.name || "Album");
+        const sub = decode(data.description || (data.year ? `${data.year} \u2022 Album` : "Album"));
+        dom.playlistViewHeader.innerHTML = `
+          <div style="display:flex;align-items:center;gap:24px;">
+            <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
+              ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+            </div>
+            <div>
+              <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Album</p>
+              <h2>${name}</h2>
+              <p style="color:var(--text-sub);font-size:0.85rem">${sub} \u2022 ${songs.length} songs</p>
+            </div>
+          </div>
+          <div class="pl-header-controls">
+            <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
+            <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+          </div>
+        `;
+        renderSongList(dom.playlistViewSongs, songs, songs);
+        switchPage("playlistView");
+        $("plViewPlay").onclick = () => playSongAt(0, songs);
+        $("plViewShuffle").onclick = () => {
+          const shuffled = [...songs];
+          for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+          state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
+          playSongAt(0, shuffled);
+        };
+      } catch {
+        toast("Failed to load album");
+      }
     }
 
 
@@ -2842,33 +2483,17 @@
 
     // ── RENDER: FEATURED BANNER ──
     function renderBanner(song, label) {
-      clearChildren(dom.featuredBanner);
-      if (!song) return;
-      if (song.image) {
-        const art = document.createElement("img");
-        art.className = "banner-art";
-        art.src = song.image;
-        art.alt = "";
-        dom.featuredBanner.appendChild(art);
-      }
-      const gradient = document.createElement("div");
-      gradient.className = "banner-gradient";
-      const content = document.createElement("div");
-      content.className = "banner-content";
-      const labelEl = document.createElement("div");
-      labelEl.className = "banner-label";
-      labelEl.textContent = label || "Featured";
-      const titleEl = document.createElement("div");
-      titleEl.className = "banner-title";
-      titleEl.textContent = song.title;
-      const subEl = document.createElement("div");
-      subEl.className = "banner-sub";
-      subEl.textContent = `${song.artist}${song.album ? " • " + song.album : ""}`;
-      const playEl = document.createElement("div");
-      playEl.className = "banner-play";
-      playEl.appendChild(makeSvgIcon("#ico-play", 24));
-      content.append(labelEl, titleEl, subEl, playEl);
-      dom.featuredBanner.append(gradient, content);
+      if (!song) { dom.featuredBanner.innerHTML = ""; return; }
+      dom.featuredBanner.innerHTML = `
+        ${song.image ? `<img class="banner-art" src="${song.image}" alt="">` : ""}
+        <div class="banner-gradient"></div>
+        <div class="banner-content">
+          <div class="banner-label">${label || "Featured"}</div>
+          <div class="banner-title">${song.title}</div>
+          <div class="banner-sub">${song.artist}${song.album ? ` \u2022 ${song.album}` : ""}</div>
+          <div class="banner-play"><svg><use href="#ico-play"/></svg></div>
+        </div>
+      `;
       dom.featuredBanner.onclick = () => playSongAt(0, state.songs);
     }
 
@@ -2881,82 +2506,33 @@
       const row = document.createElement("div");
       row.className = `song-row${isCurrent(song) ? " active" : ""}`;
       row.dataset.songId = song.id;
-      const rowNum = document.createElement("span");
-      rowNum.className = "row-num";
-      rowNum.dataset.idx = index + 1;
-      const numText = document.createElement("span");
-      numText.className = "num-text";
-      numText.textContent = index + 1;
-      const hoverPlay = document.createElement("span");
-      hoverPlay.className = "hover-play";
-      hoverPlay.appendChild(makeSvgIcon("#ico-play", 14));
-      rowNum.append(numText, hoverPlay);
-
-      const rowArt = document.createElement("div");
-      rowArt.className = "row-art";
-      if (song.image) {
-        const img = document.createElement("img");
-        img.src = song.image;
-        img.alt = "";
-        img.loading = "lazy";
-        rowArt.appendChild(img);
-      }
-
-      const rowInfo = document.createElement("div");
-      rowInfo.className = "row-info";
-      const rowTitle = document.createElement("div");
-      rowTitle.className = "row-title";
-      rowTitle.textContent = song.title;
-      const rowArtist = document.createElement("div");
-      rowArtist.className = "row-artist";
-      appendArtistLinks(rowArtist, song.artistIds, song.artist, (e, artistId) => {
-        e.stopPropagation();
-        openArtistPage(artistId);
-      });
-      rowInfo.append(rowTitle, rowArtist);
-
-      const rowActions = document.createElement("div");
-      rowActions.className = "row-actions";
-      if (song.playCount) {
-        const plays = document.createElement("span");
-        plays.className = "row-plays";
-        plays.textContent = formatPlayCount(song.playCount);
-        rowActions.appendChild(plays);
-      }
-
-      const favBtn = document.createElement("button");
-      favBtn.className = `action-btn${isFav(song.id) ? " is-active" : ""}`;
-      favBtn.dataset.act = "fav";
-      favBtn.title = "Like";
-      setButtonIcon(favBtn, isFav(song.id) ? "#ico-heart" : "#ico-heart-outline");
-
-      const duration = document.createElement("span");
-      duration.className = "duration";
-      duration.textContent = fmt(song.duration);
-
-      const moreBtn = document.createElement("button");
-      moreBtn.className = "action-btn";
-      moreBtn.dataset.act = "more";
-      moreBtn.title = "More";
-      setButtonIcon(moreBtn, "#ico-more");
-
-      rowActions.append(favBtn, duration, moreBtn);
-      row.append(rowNum, rowArt, rowInfo, rowActions);
+      row.innerHTML = `
+        <span class="row-num" data-idx="${index + 1}"><span class="num-text">${index + 1}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span></span>
+        <div class="row-art">${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : ""}</div>
+        <div class="row-info">
+          <div class="row-title">${song.title}</div>
+          <div class="row-artist">${song.artist}</div>
+        </div>
+        <div class="row-actions">
+          <button class="action-btn${isFav(song.id) ? " is-active" : ""}" data-act="fav" title="Like">
+            <svg style="width:16px;height:16px;fill:currentColor"><use href="${isFav(song.id) ? "#ico-heart" : "#ico-heart-outline"}"/></svg>
+          </button>
+          <span class="duration">${fmt(song.duration)}</span>
+          <button class="action-btn" data-act="more" title="More">
+            <svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-more"/></svg>
+          </button>
+        </div>
+      `;
 
       // Click to play
-      rowTitle.onclick = () => playSong(song, queue);
-      rowArt.onclick = () => playSong(song, queue);
-
-      // Artist link clicks → open artist page
-      row.querySelectorAll(".artist-link").forEach(link => {
-        link.onclick = (e) => { e.stopPropagation(); openArtistPage(link.dataset.artistId); };
-      });
+      row.querySelector(".row-info").onclick = () => playSong(song, queue);
+      row.querySelector(".row-art").onclick = () => playSong(song, queue);
 
       // Fav toggle
-      favBtn.onclick = (e) => { e.stopPropagation(); toggleFav(song); };
+      row.querySelector('[data-act="fav"]').onclick = (e) => { e.stopPropagation(); toggleFav(song); };
 
       // More menu
-      moreBtn.onclick = (e) => { e.stopPropagation(); showContextMenu(e, song, queue); };
+      row.querySelector('[data-act="more"]').onclick = (e) => { e.stopPropagation(); showContextMenu(e, song, queue); };
 
       return row;
     }
@@ -3098,14 +2674,6 @@
 
     async function playSongAt(index, queue) {
       if (!queue?.length || !queue[index]) return;
-      if (!state.user) {
-        toast("Sign in to play music");
-        dom.emailInput.value = "";
-        $("passwordInput").value = "";
-        dom.authMessage.textContent = "";
-        dom.authModal.classList.remove("hidden");
-        return;
-      }
       const prevSrc = audio.dataset.blobUrl || "";
       if (prevSrc) URL.revokeObjectURL(prevSrc);
 
@@ -3127,10 +2695,7 @@
       // Update player bar UI
       dom.nowArt.src = song.image || "";
       dom.nowTitle.textContent = song.title;
-      appendArtistLinks(dom.nowArtist, song.artistIds, song.artist, (e, artistId) => {
-        e.stopPropagation();
-        openArtistPage(artistId);
-      });
+      dom.nowArtist.textContent = song.artist;
       dom.totalTime.textContent = fmt(song.duration);
       updatePlayBtn(true);
       updateNowFav();
@@ -3167,24 +2732,6 @@
       let next = state.currentIndex + 1;
       if (next >= state.currentQueue.length) {
         if (state.repeatMode === "all" || force) next = 0;
-        else if (state.autoplay) {
-          // Auto-play: fetch suggestions based on last song
-          const lastSong = state.currentQueue[state.currentQueue.length - 1];
-          if (lastSong) {
-            toast("Auto-playing similar songs...");
-            fetchSuggestions(lastSong.id).then(suggestions => {
-              if (suggestions.length) {
-                const newSongs = suggestions.filter(s => !state.currentQueue.find(q => q.id === s.id));
-                if (newSongs.length) {
-                  state.currentQueue.push(...newSongs);
-                  playSongAt(state.currentIndex + 1, state.currentQueue);
-                } else { audio.pause(); updatePlayBtn(false); }
-              } else { audio.pause(); updatePlayBtn(false); }
-            }).catch(() => { audio.pause(); updatePlayBtn(false); });
-            return;
-          }
-          audio.pause(); updatePlayBtn(false); return;
-        }
         else { audio.pause(); updatePlayBtn(false); return; }
       }
       playSongAt(next, state.currentQueue);
@@ -3456,113 +3003,6 @@
     dom.plCancel.onclick = () => dom.playlistModal.classList.add("hidden");
     $("sidebarCreatePlaylist").onclick = () => openPlaylistModal();
 
-    // ── SPOTIFY IMPORT ──
-    $("sidebarImportSpotify").onclick = () => {
-      if (!state.user) { toast("Sign in first"); return; }
-      $("spotifyImportInput").click();
-    };
-    $("importClose").onclick = () => $("spotifyImportModal").classList.add("hidden");
-
-    function parseCSV(text) {
-      const lines = [];
-      let cur = "", inQuote = false;
-      for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        if (ch === '"') { inQuote = !inQuote; cur += ch; }
-        else if (ch === '\n' && !inQuote) { lines.push(cur); cur = ""; }
-        else { cur += ch; }
-      }
-      if (cur.trim()) lines.push(cur);
-      if (!lines.length) return [];
-      const headers = parseCSVLine(lines[0]);
-      return lines.slice(1).map(line => {
-        const vals = parseCSVLine(line);
-        const obj = {};
-        headers.forEach((h, i) => obj[h] = vals[i] || "");
-        return obj;
-      });
-    }
-
-    function parseCSVLine(line) {
-      const result = [];
-      let cur = "", inQuote = false;
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '"') {
-          if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
-          else { inQuote = !inQuote; }
-        } else if (ch === ',' && !inQuote) { result.push(cur); cur = ""; }
-        else { cur += ch; }
-      }
-      result.push(cur);
-      return result;
-    }
-
-    $("spotifyImportInput").onchange = async (e) => {
-      const files = Array.from(e.target.files);
-      if (!files.length) return;
-      e.target.value = "";
-      const modal = $("spotifyImportModal");
-      const prog = $("importProgress");
-      modal.classList.remove("hidden");
-      prog.innerHTML = "<p>Starting import...</p>";
-
-      for (const file of files) {
-        const plName = file.name.replace(/\.csv$/i, "").replace(/_/g, " ");
-        prog.innerHTML += `<p style="margin-top:8px"><b>${plName}</b></p>`;
-        const text = await file.text();
-        const rows = parseCSV(text);
-        if (!rows.length) { prog.innerHTML += `<p style="color:var(--text-muted)">Empty file, skipped</p>`; continue; }
-
-        const pl = createPlaylist(plName);
-        if (!pl) continue;
-
-        let found = 0, notFound = 0;
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-          const trackName = row["Track Name"] || "";
-          const artistName = (row["Artist Name(s)"] || "").split(";")[0];
-          if (!trackName) { notFound++; continue; }
-
-          prog.innerHTML = prog.innerHTML.replace(/<span id="importStatus"><\/span>/, "") +
-            `<span id="importStatus" style="display:block;color:var(--text-muted);font-size:0.8rem;">${i + 1}/${rows.length}: ${trackName}</span>`;
-          prog.scrollTop = prog.scrollHeight;
-
-          try {
-            const query = `${trackName} ${artistName}`.trim();
-            const data = await apiFetch(`/search/songs?query=${encodeURIComponent(query)}&limit=5`);
-            const results = data?.data?.results || [];
-            const match = results.find(s => {
-              const n = decode(s.name || "").toLowerCase();
-              return n === trackName.toLowerCase() || n.includes(trackName.toLowerCase());
-            }) || results[0];
-
-            if (match) {
-              const song = normalizeSong(match);
-              const items = state.playlistSongs[pl.id] || [];
-              if (!items.find(s => s.id === song.id)) {
-                items.push(song);
-                state.playlistSongs[pl.id] = items;
-                if (!pl.cover_song) pl.cover_song = song;
-              }
-              found++;
-            } else { notFound++; }
-          } catch { notFound++; }
-
-          // rate limit — small delay between API calls
-          await new Promise(r => setTimeout(r, 150));
-        }
-
-        savePlaylists();
-        renderSidebarPlaylists();
-        const statusEl = prog.querySelector("#importStatus");
-        if (statusEl) statusEl.remove();
-        prog.innerHTML += `<p style="color:var(--accent)">✓ ${found} songs added${notFound ? `, ${notFound} not found` : ""}</p>`;
-      }
-
-      prog.innerHTML += `<p style="margin-top:8px;color:var(--text)"><b>Import complete!</b></p>`;
-    };
-
     // ── PERSIST SETTINGS ──
     function persistSettings(partial) {
       saveSettings(partial);
@@ -3582,84 +3022,29 @@
       renderFavorites();
       renderDownloads();
       updateNowFav();
-      // One-time Spotify import
-      if (state.user && !localStorage.getItem(userKey("spotify_imported"))) {
-        fetch("spotify_import.json").then(r => r.ok ? r.json() : null).then(data => {
-          if (!data) return;
-          data.playlists.forEach(pl => {
-            if (!state.playlists.find(p => p.name === pl.name)) {
-              state.playlists.push(pl);
-              state.playlistSongs[pl.id] = data.playlistSongs[pl.id] || [];
-            }
-          });
-          savePlaylists();
-          localStorage.setItem(userKey("spotify_imported"), "1");
-          renderSidebarPlaylists();
-          toast("Imported " + data.playlists.length + " Spotify playlists!");
-        }).catch(() => {});
-      }
     }
 
     // ── AUTH ──
     function updateAuthUI() {
-      const topAvatar = $("topbarAvatarText");
-      const topBtn = $("topbarAuth");
       if (state.user) {
         dom.userName.textContent = state.user.name;
         dom.userAvatar.textContent = state.user.name[0].toUpperCase();
-        topAvatar.textContent = state.user.name[0].toUpperCase();
-        topBtn.classList.add("logged-in");
-        // Remove login gate
-        const gate = $("loginGate");
-        if (gate) gate.remove();
       } else {
         dom.userName.textContent = "Sign in";
         dom.userAvatar.textContent = "?";
-        topAvatar.textContent = "?";
-        topBtn.classList.remove("logged-in");
-        showLoginGate();
       }
     }
 
-    function showLoginGate() {
-      if ($("loginGate")) return;
-      const gate = document.createElement("div");
-      gate.className = "login-gate";
-      gate.id = "loginGate";
-      gate.innerHTML = `
-        <div style="width:72px;height:72px;border-radius:50%;background:var(--accent);display:grid;place-items:center;margin-bottom:8px;">
-          <span style="font-size:2rem;font-weight:800;color:#000;">I</span>
-        </div>
-        <h2>Welcome to Isai</h2>
-        <p>Sign in to start listening to music</p>
-        <button class="btn-primary" id="loginGateBtn" style="margin-top:8px;padding:14px 48px;font-size:1rem;">Sign in</button>
-      `;
-      document.body.appendChild(gate);
-      $("loginGateBtn").onclick = () => {
-        dom.emailInput.value = "";
-        $("passwordInput").value = "";
-        dom.authMessage.textContent = "";
-        dom.authModal.classList.remove("hidden");
-      };
-    }
-
-    function handleAuthClick() {
+    dom.authTrigger.onclick = () => {
       if (state.user) {
         if (confirm("Sign out?")) {
           state.user = null;
           saveAuth();
-          audio.pause();
-          audio.src = "";
-          state.favorites = []; state.playlists = []; state.playlistSongs = {}; state.downloads = [];
-          state.currentQueue = []; state.currentIndex = -1;
+          state.favorites = []; state.playlists = []; state.playlistSongs = []; state.downloads = [];
           updateAuthUI();
-          updatePlayBtn(false);
           renderSidebarPlaylists();
           renderFavorites();
           renderDownloads();
-          dom.nowTitle.textContent = "Isai";
-          dom.nowArtist.textContent = "Your music home";
-          dom.nowArt.src = "";
           toast("Signed out");
         }
       } else {
@@ -3668,10 +3053,7 @@
         dom.authMessage.textContent = "";
         dom.authModal.classList.remove("hidden");
       }
-    }
-
-    dom.authTrigger.onclick = handleAuthClick;
-    $("topbarAuth").onclick = handleAuthClick;
+    };
 
     dom.authSend.onclick = async () => {
       const email = dom.emailInput.value.trim().toLowerCase();
@@ -3695,81 +3077,24 @@
     $("passwordInput").addEventListener("keydown", (e) => { if (e.key === "Enter") dom.authSend.click(); });
     dom.emailInput.addEventListener("keydown", (e) => { if (e.key === "Enter") $("passwordInput").focus(); });
 
-    dom.authCancel.onclick = () => {
-      // Only allow cancel if already logged in (e.g. switching accounts)
-      if (state.user) dom.authModal.classList.add("hidden");
-      else toast("Please sign in to continue");
-    };
+    dom.authCancel.onclick = () => dom.authModal.classList.add("hidden");
 
-    // ── SEARCH (Spotify-style: top result + albums + songs) ──
-    async function searchAll(query) {
-      const data = await apiFetch(`/search?query=${encodeURIComponent(query)}`);
-      return data?.data || {};
-    }
-
-    async function searchAlbums(query) {
-      const data = await apiFetch(`/search/albums?query=${encodeURIComponent(query)}&limit=10`);
-      return data?.data?.results || [];
-    }
-
-    async function fetchAlbumSongs(albumId) {
-      const data = await apiFetch(`/albums?id=${encodeURIComponent(albumId)}`);
-      return {
-        name: decode(data?.data?.name || "Album"),
-        image: (data?.data?.image || []).at(-1)?.url || "",
-        songs: (data?.data?.songs || []).map(normalizeSong).filter(s => s.src).map(enrichSong)
-      };
-    }
-
+    // ── SEARCH ──
     function renderSearchAlbumCard(album) {
-      const imgs = Array.isArray(album.image) ? album.image : [];
-      const img = imgs.at(-1)?.url || imgs[0]?.url || "";
-      const name = decode(album.name || album.title || "");
-      const artist = album.artists?.primary?.map(a => a.name).join(", ") || album.description || "";
       const card = document.createElement("div");
       card.className = "card";
-      const art = document.createElement("div");
-      art.className = "card-art";
-      if (img) {
-        const artImg = document.createElement("img");
-        artImg.src = img;
-        artImg.alt = name;
-        artImg.loading = "lazy";
-        art.appendChild(artImg);
-      }
-      const play = document.createElement("div");
-      play.className = "card-play";
-      play.appendChild(makeSvgIcon("#ico-play", 20));
-      art.appendChild(play);
-      const title = document.createElement("div");
-      title.className = "card-title";
-      title.textContent = name;
-      const sub = document.createElement("div");
-      sub.className = "card-sub";
-      sub.textContent = `${album.year || ""}${artist ? `${album.year ? " - " : ""}${artist}` : ""}`;
-      card.append(art, title, sub);
-      card.onclick = async () => {
-        toast("Loading album...");
-        try {
-          const album_data = await fetchAlbumSongs(album.id);
-          if (album_data.songs.length) {
-            clearChildren(dom.playlistViewHeader);
-            const header = makePlaylistHeader("Album", album_data.name, album_data.songs.length, album_data.image);
-            dom.playlistViewHeader.appendChild(header.element);
-            renderSongList(dom.playlistViewSongs, album_data.songs, album_data.songs);
-            switchPage("playlistView");
-            header.playBtn.onclick = () => playSongAt(0, album_data.songs);
-            header.shuffleBtn.onclick = () => {
-              const shuffled = [...album_data.songs];
-              for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-              state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
-              playSongAt(0, shuffled);
-            };
-          }
-        } catch { toast("Failed to load album"); }
-      };
+      card.innerHTML = `
+        <div class="card-art">
+          ${album.image ? `<img src="${album.image}" alt="${album.title}" loading="lazy">` : ""}
+          <div class="card-play"><svg><use href="#ico-play"/></svg></div>
+        </div>
+        <div class="card-title">${album.title}</div>
+        <div class="card-sub">${album.subtitle || "Album"}</div>
+      `;
+      card.onclick = () => fetchAndPlayAlbum(album.id);
       return card;
     }
+
     let doSearch = debounce(async (query) => {
       if (!query.trim()) {
         dom.searchResults.innerHTML = "";
@@ -3781,60 +3106,36 @@
       $("searchHistoryWrap").classList.add("hidden");
       $("searchEmpty").classList.add("hidden");
       const token = ++state.searchToken;
-      dom.searchResults.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-sub)">Searching...</div>';
-
       try {
-        // Fetch albums, songs, and artists in parallel
-        const [albums, songs, searchData] = await Promise.all([
-          searchAlbums(query),
-          searchSongs(query),
-          apiFetch(`/search?query=${encodeURIComponent(query)}`)
-        ]);
+        const { songs, albums } = await searchAll(query);
         if (token !== state.searchToken) return;
         addSearchHistory(query);
 
-        const artists = searchData?.data?.artists?.results || [];
-
         dom.searchResults.innerHTML = "";
-
-        if (albums.length || songs.length || artists.length) {
-          // Artists section (circular cards)
-          if (artists.length) {
-            const artistSection = document.createElement("div");
-            artistSection.className = "search-albums-section";
-            artistSection.innerHTML = "<h4>Artists</h4>";
-            const artistGrid = document.createElement("div");
-            artistGrid.className = "artist-search-grid";
-            artists.slice(0, 6).forEach(a => artistGrid.appendChild(renderArtistCard(a)));
-            artistSection.appendChild(artistGrid);
-            dom.searchResults.appendChild(artistSection);
-          }
-
-          // Albums section (movie/album cards)
-          if (albums.length) {
-            const albumSection = document.createElement("div");
-            albumSection.className = "search-albums-section";
-            albumSection.innerHTML = "<h4>Albums & Movies</h4>";
-            const albumGrid = document.createElement("div");
-            albumGrid.className = "search-albums-grid";
-            albums.slice(0, 8).forEach(a => albumGrid.appendChild(renderSearchAlbumCard(a)));
-            albumSection.appendChild(albumGrid);
-            dom.searchResults.appendChild(albumSection);
-          }
-
-          // Songs section
-          if (songs.length) {
-            const songsSection = document.createElement("div");
-            songsSection.className = "search-songs-col";
-            songsSection.innerHTML = "<h4>Songs</h4>";
-            const songsList = document.createElement("div");
-            songsList.className = "song-list";
-            songs.forEach((s, i) => songsList.appendChild(makeSongRow(s, i, songs)));
-            songsSection.appendChild(songsList);
-            dom.searchResults.appendChild(songsSection);
-          }
-        } else {
+        if (!songs.length && !albums.length) {
           dom.searchResults.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>`;
+          return;
+        }
+
+        if (albums.length) {
+          const albumSection = document.createElement("div");
+          albumSection.style.marginBottom = "32px";
+          albumSection.innerHTML = `<div class="section-header"><h3>Albums &amp; Movies</h3></div>`;
+          const grid = document.createElement("div");
+          grid.className = "card-grid";
+          albums.slice(0, 12).forEach(a => grid.appendChild(renderSearchAlbumCard(a)));
+          albumSection.appendChild(grid);
+          dom.searchResults.appendChild(albumSection);
+        }
+
+        if (songs.length) {
+          const songSection = document.createElement("div");
+          songSection.innerHTML = `<div class="section-header"><h3>Songs</h3></div>`;
+          const list = document.createElement("div");
+          list.className = "song-list";
+          dom.searchResults.appendChild(songSection);
+          dom.searchResults.appendChild(list);
+          renderSongList(list, songs, songs);
         }
       } catch {
         if (token === state.searchToken) dom.searchResults.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try a different search.</p></div>`;
@@ -3882,28 +3183,17 @@
         const favBtn = row.querySelector('[data-act="fav"]');
         if (favBtn) {
           favBtn.classList.toggle("is-active", isFav(songId));
-          setButtonIcon(favBtn, isFav(songId) ? "#ico-heart" : "#ico-heart-outline");
+          favBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${isFav(songId) ? "#ico-heart" : "#ico-heart-outline"}"/></svg>`;
         }
         // Equalizer bars
         const numEl = row.querySelector(".row-num");
         if (numEl) {
           const idx = numEl.dataset.idx || "";
-          clearChildren(numEl);
           if (isActive && !audio.paused) {
-            const eqBars = document.createElement("div");
-            eqBars.className = "eq-bars";
-            eqBars.append(document.createElement("span"), document.createElement("span"), document.createElement("span"));
-            numEl.appendChild(eqBars);
+            numEl.innerHTML = `<div class="eq-bars"><span></span><span></span><span></span></div><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
           } else {
-            const numText = document.createElement("span");
-            numText.className = "num-text";
-            numText.textContent = idx;
-            numEl.appendChild(numText);
+            numEl.innerHTML = `<span class="num-text">${idx}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
           }
-          const hoverPlay = document.createElement("span");
-          hoverPlay.className = "hover-play";
-          hoverPlay.appendChild(makeSvgIcon("#ico-play", 14));
-          numEl.appendChild(hoverPlay);
         }
       });
     }
@@ -3922,176 +3212,56 @@
 
     // ── HOME: SPOTIFY-STYLE SECTIONS ──
     const HOME_SECTIONS = [
-      { title: `Trending ${CURRENT_YEAR}`, queries: [
-        { q: `trending songs india ${CURRENT_YEAR}` },
-        { q: `love songs trending ${CURRENT_YEAR}` },
-        { q: `india superhits awards ${CURRENT_YEAR}` },
-        { q: "india superhits top 50" },
-        { q: "chennai hot 50" }
+      { title: "Trending Now", queries: [
+        { type: "playlist", q: "chartbusters 2025 tamil" },
+        { type: "playlist", q: "chartbusters 2025 hindi" },
+        { type: "playlist", q: "top hits 2025 english" },
+        { type: "playlist", q: "global top hits 2025" },
+        { type: "playlist", q: "viral hits 2025" }
       ]},
-      { title: "Tamil \u2022 Latest", queries: [
-        { q: "trending tamil songs" },
-        { q: "trending pop tamil" },
-        { q: `chartbusters ${CURRENT_YEAR} tamil` },
-        { q: `dance hits ${CURRENT_YEAR} tamil` },
-        { q: `romantic hits ${CURRENT_YEAR} tamil` }
+      { title: "Tamil Hits", queries: [
+        { type: "playlist", q: "tamil hits 2025" },
+        { type: "playlist", q: "tamil melody songs" },
+        { type: "playlist", q: "tamil mass kuthu songs" },
+        { type: "playlist", q: "AR Rahman tamil hits" },
+        { type: "playlist", q: "Anirudh Ravichander songs" }
       ]},
-      { title: "Tamil \u2022 All Time", queries: [
-        { q: "anirudh ravichander tamil" },
-        { q: "AR Rahman love songs tamil" },
-        { q: "top kuthu tamil" },
-        { q: "semma mass tamil" },
-        { q: "most streamed love songs tamil" }
+      { title: "Bollywood & Hindi", queries: [
+        { type: "playlist", q: "bollywood hits 2025" },
+        { type: "playlist", q: "romantic hindi songs 2025" },
+        { type: "playlist", q: "arijit singh hits" },
+        { type: "playlist", q: "bollywood dance hits 2025" },
+        { type: "playlist", q: "hindi lofi chill" }
       ]},
-      { title: "Hindi \u2022 Hits", queries: [
-        { q: `chartbusters ${CURRENT_YEAR} hindi` },
-        { q: `romantic hits ${CURRENT_YEAR} hindi` },
-        { q: `dance hits ${CURRENT_YEAR} hindi` },
-        { q: `pop hits ${CURRENT_YEAR} hindi` },
-        { q: `hip hop hits ${CURRENT_YEAR} hindi` }
-      ]},
-      { title: "Hindi \u2022 Chill & Classics", queries: [
-        { q: "chill maaro lo-fi mix" },
-        { q: "best of 90s hindi" },
-        { q: "best of romance hindi" },
-        { q: "arijit singh hits" },
-        { q: "retro chill" }
-      ]},
-      { title: "English \u2022 Global", queries: [
-        { q: `chartbusters ${CURRENT_YEAR} international` },
-        { q: `pop hits ${CURRENT_YEAR} english` },
-        { q: `dance hits ${CURRENT_YEAR} english` },
-        { q: `edm hits ${CURRENT_YEAR} english` },
-        { q: `kpop hits ${CURRENT_YEAR}` }
+      { title: "International", queries: [
+        { type: "playlist", q: "pop hits 2025" },
+        { type: "playlist", q: "hip hop rap 2025" },
+        { type: "playlist", q: "kpop hits 2025" },
+        { type: "playlist", q: "latin reggaeton 2025" },
+        { type: "playlist", q: "edm dance electronic 2025" }
       ]},
       { title: "Mood & Vibes", queries: [
-        { q: "chill karo na" },
-        { q: "workout gym motivation hindi" },
-        { q: "sad love tamil" },
-        { q: `party songs ${CURRENT_YEAR}` },
-        { q: "travel tunes tamil" }
+        { type: "playlist", q: "chill vibes relaxing" },
+        { type: "playlist", q: "workout gym motivation" },
+        { type: "playlist", q: "love songs romantic" },
+        { type: "playlist", q: "party songs 2025" },
+        { type: "playlist", q: "sad songs emotional" }
       ]}
     ];
 
-    const _seenPlaylistIds = new Set();
-    let homeSectionsObserver = null;
-    let homeSectionLoadChain = Promise.resolve();
-
-    function getHomeSectionsCache() {
-      return safeParse(localStorage.getItem(HOME_SECTIONS_CACHE_KEY), {});
-    }
-
-    function setHomeSectionsCache(cache) {
-      localStorage.setItem(HOME_SECTIONS_CACHE_KEY, JSON.stringify(cache));
-    }
-
-    function getHomeSectionCacheKey(section) {
-      return `${section.title}::${section.queries.map(q => q.q).join("|")}`;
-    }
-
-    function getCachedHomeSection(section) {
-      const cache = getHomeSectionsCache();
-      const entry = cache[getHomeSectionCacheKey(section)];
-      if (!entry || Date.now() - entry.ts > CACHE_TTL || !Array.isArray(entry.cards)) return null;
-      return entry.cards;
-    }
-
-    function cacheHomeSection(section, cards) {
-      const cache = getHomeSectionsCache();
-      cache[getHomeSectionCacheKey(section)] = { ts: Date.now(), cards };
-      setHomeSectionsCache(cache);
-    }
-
     async function fetchPlaylistCard(query) {
       try {
-        const search = await apiFetch(`/search/playlists?query=${encodeURIComponent(query)}&limit=5`);
-        const results = search?.data?.results || [];
-        const result = results[0];
+        const search = await apiFetch(`/search/playlists?query=${encodeURIComponent(query)}&limit=1`);
+        const result = search?.data?.results?.[0];
         if (!result) return null;
         const imgs = Array.isArray(result.image) ? result.image : [];
         return {
           id: result.id,
           title: decode(result.name || result.title || query),
-          image: imgs.at(-1)?.url || imgs[0]?.url || "",
+          image: (imgs.length ? imgs[imgs.length - 1]?.url : "") || imgs[0]?.url || "",
           songCount: result.songCount || 0
         };
       } catch { return null; }
-    }
-
-    async function fetchHomeSectionCards(section) {
-      const cached = getCachedHomeSection(section);
-      if (cached) {
-        const availableCached = cached.filter(card => card && !_seenPlaylistIds.has(card.id));
-        if (availableCached.length) return availableCached;
-      }
-      const queryResults = await Promise.all(section.queries.map(q => fetchPlaylistCard(q.q)));
-      const seenIds = new Set(_seenPlaylistIds);
-      const cards = [];
-      queryResults.forEach(card => {
-        if (card && !seenIds.has(card.id)) {
-          seenIds.add(card.id);
-          cards.push(card);
-        }
-      });
-      cacheHomeSection(section, cards);
-      return cards;
-    }
-
-    function renderHomeSection(section, cards) {
-      const uniqueCards = cards.filter(card => {
-        if (!card || _seenPlaylistIds.has(card.id)) return false;
-        _seenPlaylistIds.add(card.id);
-        return true;
-      });
-      if (!uniqueCards.length) return null;
-      const sectionEl = document.createElement("div");
-      sectionEl.style.marginBottom = "36px";
-      const header = document.createElement("div");
-      header.className = "section-header";
-      const title = document.createElement("h3");
-      title.textContent = section.title;
-      header.appendChild(title);
-      const grid = document.createElement("div");
-      grid.className = "card-grid";
-      uniqueCards.forEach(item => grid.appendChild(renderHomeCard(item)));
-      sectionEl.append(header, grid);
-      return sectionEl;
-    }
-
-    async function loadDeferredHomeSection(placeholder, section) {
-      if (!placeholder?.isConnected || placeholder.dataset.loaded === "1") return;
-      placeholder.dataset.loaded = "1";
-      try {
-        const cards = await fetchHomeSectionCards(section);
-        const sectionEl = renderHomeSection(section, cards);
-        if (sectionEl) placeholder.replaceWith(sectionEl);
-        else placeholder.remove();
-      } catch {
-        placeholder.remove();
-      }
-    }
-
-    function setupHomeSectionsObserver(placeholders) {
-      homeSectionsObserver?.disconnect();
-      homeSectionsObserver = null;
-      if (!placeholders.length) return;
-      if (!("IntersectionObserver" in window)) {
-        homeSectionLoadChain = placeholders.reduce(
-          (chain, { placeholder, section }) => chain.then(() => loadDeferredHomeSection(placeholder, section)),
-          Promise.resolve()
-        );
-        return;
-      }
-      homeSectionsObserver = new IntersectionObserver((entries) => {
-        entries.filter(entry => entry.isIntersecting).forEach(entry => {
-          const placeholder = entry.target;
-          const index = Number(placeholder.dataset.sectionIndex);
-          const section = HOME_SECTIONS[index];
-          homeSectionsObserver?.unobserve(placeholder);
-          homeSectionLoadChain = homeSectionLoadChain.then(() => loadDeferredHomeSection(placeholder, section));
-        });
-      }, { root: dom.mainContent, rootMargin: "300px 0px" });
-      placeholders.forEach(({ placeholder }) => homeSectionsObserver.observe(placeholder));
     }
 
     async function fetchAndPlayPlaylist(playlistId) {
@@ -4103,13 +3273,26 @@
           // Open in playlist view style
           const plName = decode(pl?.data?.name || "Playlist");
           const cover = songs[0]?.image || "";
-          clearChildren(dom.playlistViewHeader);
-          const header = makePlaylistHeader("Playlist", plName, songs.length, cover);
-          dom.playlistViewHeader.appendChild(header.element);
+          dom.playlistViewHeader.innerHTML = `
+            <div style="display:flex;align-items:center;gap:24px;">
+              <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
+                ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+              </div>
+              <div>
+                <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Playlist</p>
+                <h2>${plName}</h2>
+                <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs</p>
+              </div>
+            </div>
+            <div class="pl-header-controls">
+              <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
+              <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+            </div>
+          `;
           renderSongList(dom.playlistViewSongs, songs, songs);
           switchPage("playlistView");
-          header.playBtn.onclick = () => playSongAt(0, songs);
-          header.shuffleBtn.onclick = () => {
+          $("plViewPlay").onclick = () => playSongAt(0, songs);
+          $("plViewShuffle").onclick = () => {
             const shuffled = [...songs];
             for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
             state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
@@ -4124,26 +3307,14 @@
     function renderHomeCard(item) {
       const card = document.createElement("div");
       card.className = "card";
-      const art = document.createElement("div");
-      art.className = "card-art";
-      if (item.image) {
-        const img = document.createElement("img");
-        img.src = item.image;
-        img.alt = item.title;
-        img.loading = "lazy";
-        art.appendChild(img);
-      }
-      const play = document.createElement("div");
-      play.className = "card-play";
-      play.appendChild(makeSvgIcon("#ico-play", 20));
-      art.appendChild(play);
-      const title = document.createElement("div");
-      title.className = "card-title";
-      title.textContent = item.title;
-      const sub = document.createElement("div");
-      sub.className = "card-sub";
-      sub.textContent = item.songCount ? `${item.songCount} songs` : "Playlist";
-      card.append(art, title, sub);
+      card.innerHTML = `
+        <div class="card-art">
+          ${item.image ? `<img src="${item.image}" alt="${item.title}" loading="lazy">` : ""}
+          <div class="card-play"><svg><use href="#ico-play"/></svg></div>
+        </div>
+        <div class="card-title">${item.title}</div>
+        <div class="card-sub">${item.songCount ? item.songCount + " songs" : "Playlist"}</div>
+      `;
       card.onclick = () => fetchAndPlayPlaylist(item.id);
       return card;
     }
@@ -4151,25 +3322,28 @@
     async function loadHomeSections() {
       showSkeleton();
       updateGreeting();
-      _seenPlaylistIds.clear();
-      homeSectionsObserver?.disconnect();
-      homeSectionsObserver = null;
       const container = $("homeSections");
       container.innerHTML = "";
 
+      // Load all sections in parallel
+      const sectionPromises = HOME_SECTIONS.map(async (section) => {
+        const cards = await Promise.all(section.queries.map(q => fetchPlaylistCard(q.q)));
+        return { title: section.title, cards: cards.filter(Boolean) };
+      });
+
       try {
-        const initialSections = HOME_SECTIONS.slice(0, HOME_SECTIONS_INITIAL_COUNT);
-        const initialCards = await Promise.all(initialSections.map(section => fetchHomeSectionCards(section)));
-        initialSections.forEach((section, index) => {
-          const sectionEl = renderHomeSection(section, initialCards[index]);
-          if (sectionEl) container.appendChild(sectionEl);
+        const sections = await Promise.all(sectionPromises);
+        sections.forEach(section => {
+          if (!section.cards.length) return;
+          const sectionEl = document.createElement("div");
+          sectionEl.style.marginBottom = "36px";
+          sectionEl.innerHTML = `<div class="section-header"><h3>${section.title}</h3></div>`;
+          const grid = document.createElement("div");
+          grid.className = "card-grid";
+          section.cards.forEach(item => grid.appendChild(renderHomeCard(item)));
+          sectionEl.appendChild(grid);
+          container.appendChild(sectionEl);
         });
-        const placeholders = HOME_SECTIONS.slice(HOME_SECTIONS_INITIAL_COUNT).map((section, offset) => {
-          const placeholder = makeHomeSectionPlaceholder(HOME_SECTIONS_INITIAL_COUNT + offset);
-          container.appendChild(placeholder);
-          return { placeholder, section };
-        });
-        setupHomeSectionsObserver(placeholders);
         showHome();
       } catch (err) {
         showError(err.message);
@@ -4177,12 +3351,11 @@
     }
 
     async function loadInitial(force = false) {
-      if (force) localStorage.removeItem(HOME_SECTIONS_CACHE_KEY);
       await loadHomeSections();
     }
 
     dom.retryBtn.onclick = () => loadInitial(true);
-    dom.topbarRefresh.onclick = () => { localStorage.removeItem(CACHE_KEY); localStorage.removeItem(HOME_SECTIONS_CACHE_KEY); loadInitial(true); };
+    dom.topbarRefresh.onclick = () => { localStorage.removeItem(CACHE_KEY); loadInitial(true); };
 
     // ── CROSSFADE ──
     state.crossfade = true;
@@ -4262,27 +3435,12 @@
       recent.slice(0, 8).forEach(song => {
         const card = document.createElement("div");
         card.className = "recent-card";
-        if (song.image) {
-          const img = document.createElement("img");
-          img.src = song.image;
-          img.alt = "";
-          img.loading = "lazy";
-          card.appendChild(img);
-        } else {
-          const fallback = document.createElement("div");
-          fallback.style.width = "56px";
-          fallback.style.height = "56px";
-          fallback.style.background = "var(--bg-elevated)";
-          card.appendChild(fallback);
-        }
-        const title = document.createElement("span");
-        title.className = "rc-title";
-        title.textContent = song.title;
-        card.appendChild(title);
+        card.innerHTML = `${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : '<div style="width:56px;height:56px;background:var(--bg-elevated)"></div>'}<span class="rc-title">${song.title}</span>`;
         card.onclick = () => playSong(song, [song]);
         grid.appendChild(card);
       });
     }
+
     // ── SEARCH HISTORY ──
     function getSearchHistory() { return safeParse(localStorage.getItem(userKey("searchHistory")), []); }
     function addSearchHistory(query) {
@@ -4366,11 +3524,7 @@
     function updateNowPlayingOverlay(song) {
       $("npArt").src = song.image || "";
       $("npTitle").textContent = song.title;
-      // Clickable artist names in now playing
-      appendArtistLinks($("npArtist"), song.artistIds, song.artist, (_e, artistId) => {
-        closeNowPlaying();
-        openArtistPage(artistId);
-      });
+      $("npArtist").textContent = song.artist;
       $("npTotal").textContent = fmt(song.duration);
       updateNpFav();
       updateNpControls();
@@ -4440,7 +3594,7 @@
         if (currentLyricsId !== song.id) return;
         if (data?.data?.lyrics) {
           lyricsText.className = "lyrics-text";
-          lyricsText.textContent = htmlToPlainText(data.data.lyrics);
+          lyricsText.innerHTML = data.data.lyrics;
         } else {
           lyricsText.className = "lyrics-text loading";
           lyricsText.textContent = "No lyrics available for this song";
@@ -4630,22 +3784,22 @@
 
     // ── BROWSE CATEGORIES ──
     const BROWSE_CATS = [
-      { label: "Tamil", q: `tamil hits ${CURRENT_YEAR}`, color: "#E13300" },
-      { label: "Pop", q: `pop hits ${CURRENT_YEAR}`, color: "#8400E7" },
-      { label: "Hip-Hop", q: `hip hop rap ${CURRENT_YEAR}`, color: "#BA5D07" },
-      { label: "Bollywood", q: `bollywood hits ${CURRENT_YEAR}`, color: "#E8115B" },
-      { label: "K-Pop", q: `kpop hits ${CURRENT_YEAR}`, color: "#148A08" },
+      { label: "Tamil", q: "tamil hits 2025", color: "#E13300" },
+      { label: "Pop", q: "pop hits 2025", color: "#8400E7" },
+      { label: "Hip-Hop", q: "hip hop rap 2025", color: "#BA5D07" },
+      { label: "Bollywood", q: "bollywood hits 2025", color: "#E8115B" },
+      { label: "K-Pop", q: "kpop hits 2025", color: "#148A08" },
       { label: "Romance", q: "love songs romantic", color: "#D84000" },
-      { label: "EDM", q: `edm dance electronic ${CURRENT_YEAR}`, color: "#0D73EC" },
+      { label: "EDM", q: "edm dance electronic 2025", color: "#0D73EC" },
       { label: "Chill", q: "chill vibes relaxing", color: "#537AA1" },
       { label: "Workout", q: "workout gym motivation", color: "#1E3264" },
-      { label: "R&B", q: `rnb soul songs ${CURRENT_YEAR}`, color: "#DC148C" },
-      { label: "Rock", q: `top rock songs ${CURRENT_YEAR}`, color: "#E91429" },
-      { label: "Latin", q: `latin reggaeton ${CURRENT_YEAR}`, color: "#477D95" },
-      { label: "Arabic", q: `arabic top songs ${CURRENT_YEAR}`, color: "#509BF5" },
-      { label: "Afrobeats", q: `afrobeats top songs ${CURRENT_YEAR}`, color: "#A56752" },
+      { label: "R&B", q: "rnb soul songs 2025", color: "#DC148C" },
+      { label: "Rock", q: "top rock songs 2025", color: "#E91429" },
+      { label: "Latin", q: "latin reggaeton 2025", color: "#477D95" },
+      { label: "Arabic", q: "arabic top songs 2025", color: "#509BF5" },
+      { label: "Afrobeats", q: "afrobeats top songs 2025", color: "#A56752" },
       { label: "Jazz", q: "jazz songs classics", color: "#2D46B9" },
-      { label: "Party", q: `party songs ${CURRENT_YEAR}`, color: "#E1118C" },
+      { label: "Party", q: "party songs 2025", color: "#E1118C" },
       { label: "Sad", q: "sad songs emotional", color: "#608108" },
       { label: "90s", q: "90s hits songs", color: "#7358FF" },
       { label: "Anirudh", q: "Anirudh Ravichander songs", color: "#E13300" },
@@ -4664,9 +3818,7 @@
         const card = document.createElement("div");
         card.className = "browse-card";
         card.style.background = cat.color;
-        const title = document.createElement("h4");
-        title.textContent = cat.label;
-        card.appendChild(title);
+        card.innerHTML = `<h4>${cat.label}</h4>`;
         card.onclick = () => {
           dom.searchInput.value = cat.q;
           dom.searchClear.classList.remove("hidden");
@@ -4689,201 +3841,6 @@
       playSongAt(0, shuffled);
     };
     $("favShuffleToggle").onclick = () => toggleShuffle();
-
-    // ── PLAY COUNT FORMATTER ──
-    function formatPlayCount(n) {
-      if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, "") + "B";
-      if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
-      if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
-      return String(n);
-    }
-
-    // ── ARTIST API ──
-    async function fetchArtist(id) {
-      const data = await apiFetch(`/artists/${encodeURIComponent(id)}`);
-      return data?.data || null;
-    }
-    async function fetchArtistSongs(id, page = 0) {
-      const data = await apiFetch(`/artists/${encodeURIComponent(id)}/songs?page=${page}&sortBy=popularity&sortOrder=desc`);
-      return (data?.data || []).map(normalizeSong).filter(s => s.src).map(enrichSong);
-    }
-    async function fetchArtistAlbums(id, page = 0) {
-      const data = await apiFetch(`/artists/${encodeURIComponent(id)}/albums?page=${page}&sortBy=popularity&sortOrder=desc`);
-      return data?.data || [];
-    }
-
-    // ── ARTIST PAGE ──
-    async function openArtistPage(artistId) {
-      if (!artistId) return;
-      switchPage("artist");
-      renderStatusMessage($("artistHeader"), "Loading artist...", "Please wait");
-      clearChildren($("artistControls"));
-      clearChildren($("artistContent"));
-
-      try {
-        const [artist, songs, albums] = await Promise.all([
-          fetchArtist(artistId),
-          fetchArtistSongs(artistId),
-          fetchArtistAlbums(artistId)
-        ]);
-        if (!artist) { toast("Artist not found"); return; }
-
-        const imgs = Array.isArray(artist.image) ? artist.image : [];
-        const img = imgs.at(-1)?.url || imgs[0]?.url || "";
-        const name = decode(artist.name || "Artist");
-        const followers = artist.followerCount ? formatPlayCount(artist.followerCount) + " followers" : "";
-        const isVerified = artist.isVerified || false;
-
-        const header = $("artistHeader");
-        clearChildren(header);
-        const avatar = document.createElement("div");
-        avatar.className = "artist-avatar";
-        if (img) {
-          const avatarImg = document.createElement("img");
-          avatarImg.src = img;
-          avatarImg.alt = name;
-          avatar.appendChild(avatarImg);
-        } else {
-          const fallback = document.createElement("div");
-          fallback.style.width = "100%";
-          fallback.style.height = "100%";
-          fallback.style.background = "var(--bg-elevated)";
-          fallback.style.display = "grid";
-          fallback.style.placeItems = "center";
-          fallback.style.fontSize = "3rem";
-          fallback.style.color = "var(--text-sub)";
-          fallback.textContent = name[0] || "?";
-          avatar.appendChild(fallback);
-        }
-        const meta = document.createElement("div");
-        meta.className = "artist-meta";
-        if (isVerified) {
-          const badge = document.createElement("span");
-          badge.className = "verified-badge";
-          const badgeIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          badgeIcon.setAttribute("viewBox", "0 0 24 24");
-          badgeIcon.style.width = "20px";
-          badgeIcon.style.height = "20px";
-          badgeIcon.style.fill = "var(--accent)";
-          const badgePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-          badgePath.setAttribute("d", "M12 1l3.09 4.26L20 6.27l-2.18 4.32L19.64 16l-4.73 1.52L12 22l-2.91-4.48L4.36 16l1.82-5.41L4 6.27l4.91-1.01z");
-          badgeIcon.appendChild(badgePath);
-          badge.appendChild(badgeIcon);
-          badge.appendChild(document.createTextNode(" Verified Artist"));
-          meta.appendChild(badge);
-        }
-        const heading = document.createElement("h1");
-        heading.textContent = name;
-        const stats = document.createElement("div");
-        stats.className = "artist-stats";
-        stats.textContent = followers;
-        meta.append(heading, stats);
-        header.append(avatar, meta);
-
-        $("artistControls").innerHTML = `
-          <button class="pl-shuffle-play" id="artistPlayAll" title="Play all"><svg><use href="#ico-play"/></svg></button>
-          <button class="ctrl-btn" id="artistShuffleAll" title="Shuffle" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
-        `;
-
-        if (songs.length) {
-          $("artistPlayAll").onclick = () => playSongAt(0, songs);
-          $("artistShuffleAll").onclick = () => {
-            const shuffled = [...songs];
-            for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-            state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
-            playSongAt(0, shuffled);
-          };
-        }
-
-        const content = $("artistContent");
-        clearChildren(content);
-        if (songs.length) {
-          const songsSection = document.createElement("div");
-          songsSection.className = "artist-section";
-          const songsTitle = document.createElement("h3");
-          songsTitle.textContent = "Popular";
-          const list = document.createElement("div");
-          list.className = "song-list";
-          songs.slice(0, 10).forEach((s, i) => list.appendChild(makeSongRow(s, i, songs)));
-          songsSection.append(songsTitle, list);
-          content.appendChild(songsSection);
-        }
-        if (albums.length) {
-          const albumsSection = document.createElement("div");
-          albumsSection.className = "artist-section";
-          const albumsTitle = document.createElement("h3");
-          albumsTitle.textContent = "Albums";
-          const grid = document.createElement("div");
-          grid.className = "search-albums-grid";
-          albums.slice(0, 12).forEach(a => grid.appendChild(renderSearchAlbumCard(a)));
-          albumsSection.append(albumsTitle, grid);
-          content.appendChild(albumsSection);
-        }
-        if (artist.bio?.length) {
-          const bioText = htmlToPlainText(artist.bio.map(b => b.text || b).join(" "));
-          if (bioText.trim()) {
-            const aboutSection = document.createElement("div");
-            aboutSection.className = "artist-section";
-            const aboutTitle = document.createElement("h3");
-            aboutTitle.textContent = "About";
-            const bio = document.createElement("p");
-            bio.style.color = "var(--text-sub)";
-            bio.style.lineHeight = "1.6";
-            bio.style.maxWidth = "640px";
-            bio.textContent = bioText;
-            aboutSection.append(aboutTitle, bio);
-            content.appendChild(aboutSection);
-          }
-        }
-      } catch (err) {
-        renderStatusMessage($("artistHeader"), "Failed to load artist", err.message || "");
-      }
-    }
-    // ── ARTIST SEARCH CARDS ──
-    function renderArtistCard(artist) {
-      const imgs = Array.isArray(artist.image) ? artist.image : [];
-      const img = imgs.at(-1)?.url || imgs[0]?.url || "";
-      const name = decode(artist.name || artist.title || "");
-      const card = document.createElement("div");
-      card.className = "artist-card";
-      const imageWrap = document.createElement("div");
-      imageWrap.className = "ac-img";
-      if (img) {
-        const imageEl = document.createElement("img");
-        imageEl.src = img;
-        imageEl.alt = name;
-        imageEl.loading = "lazy";
-        imageWrap.appendChild(imageEl);
-      } else {
-        const fallback = document.createElement("div");
-        fallback.style.width = "100%";
-        fallback.style.height = "100%";
-        fallback.style.background = "var(--bg-elevated)";
-        fallback.style.borderRadius = "50%";
-        fallback.style.display = "grid";
-        fallback.style.placeItems = "center";
-        fallback.style.fontSize = "1.5rem";
-        fallback.style.color = "var(--text-sub)";
-        fallback.textContent = name[0] || "?";
-        imageWrap.appendChild(fallback);
-      }
-      const nameEl = document.createElement("div");
-      nameEl.className = "ac-name";
-      nameEl.textContent = name;
-      const typeEl = document.createElement("div");
-      typeEl.className = "ac-type";
-      typeEl.textContent = "Artist";
-      card.append(imageWrap, nameEl, typeEl);
-      card.onclick = () => openArtistPage(artist.id);
-      return card;
-    }
-
-    // ── AUTO-PLAY (Radio) ──
-    state.autoplay = true;
-    async function fetchSuggestions(songId) {
-      const data = await apiFetch(`/songs/${encodeURIComponent(songId)}/suggestions?limit=10`);
-      return (data?.data || []).map(normalizeSong).filter(s => s.src).map(enrichSong);
-    }
 
     // ── INIT ──
     (async () => {
@@ -4922,5 +3879,3 @@
   </script>
 </body>
 </html>
-
-
