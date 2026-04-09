@@ -2125,6 +2125,7 @@
       downloads: [],
       user: null,
       currentQueue: [],
+      unshuffledQueue: [], // snapshot of the original (pre-shuffle) order so toggling shuffle off restores it
       currentIndex: -1,
       repeatMode: "off",   // off | all | one
       shuffleOn: false,
@@ -2647,10 +2648,8 @@
       $("plViewPlay").onclick = () => { if (songs.length) playSongAt(0, songs); };
       $("plViewShuffle").onclick = () => {
         if (!songs.length) return;
-        const shuffled = [...songs];
-        for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-        state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
-        playSongAt(0, shuffled);
+        if (!state.shuffleOn) { state.shuffleOn = true; updateShuffleUI(); persistSettings({ shuffle_enabled: true }); }
+        playSongAt(Math.floor(Math.random() * songs.length), songs);
       };
       $("plViewDelete").onclick = async () => {
         if (confirm(`Delete "${pl.name}"?`)) {
@@ -2721,14 +2720,36 @@
       await playSongAt(idx >= 0 ? idx : 0, queue);
     }
 
+    // Fisher-Yates shuffle that pulls a specified song to index 0 first.
+    function shuffleQueueWithFirst(arr, firstIndex) {
+      const out = arr.slice();
+      if (firstIndex > 0 && firstIndex < out.length) {
+        [out[0], out[firstIndex]] = [out[firstIndex], out[0]];
+      }
+      for (let i = out.length - 1; i > 1; i--) {
+        const j = 1 + Math.floor(Math.random() * i);
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+      return out;
+    }
+
     async function playSongAt(index, queue) {
       if (!queue?.length || !queue[index]) return;
       const prevSrc = audio.dataset.blobUrl || "";
       if (prevSrc) URL.revokeObjectURL(prevSrc);
 
-      state.currentQueue = queue.map(enrichSong);
-      state.currentIndex = index;
-      const song = state.currentQueue[index];
+      const enriched = queue.map(enrichSong);
+      // Always snapshot the unshuffled order so toggling shuffle off can restore it.
+      state.unshuffledQueue = enriched;
+      if (state.shuffleOn && enriched.length > 1) {
+        // Shuffle the new queue, putting the requested song at index 0.
+        state.currentQueue = shuffleQueueWithFirst(enriched, index);
+        state.currentIndex = 0;
+      } else {
+        state.currentQueue = enriched;
+        state.currentIndex = index;
+      }
+      const song = state.currentQueue[state.currentIndex];
       const src = await resolveSource(song);
       if (!src) { skipNext(); return; }
 
@@ -2798,16 +2819,31 @@
       if (state.currentPage === "queue") renderQueue();
     }
 
+    function updateShuffleUI() {
+      dom.shuffleBtn.classList.toggle("is-active", state.shuffleOn);
+      const np = $("npShuffle");
+      if (np) np.classList.toggle("is-active", state.shuffleOn);
+      const fav = $("favShuffleToggle");
+      if (fav) fav.classList.toggle("is-active", state.shuffleOn);
+    }
+
     function toggleShuffle() {
       state.shuffleOn = !state.shuffleOn;
-      dom.shuffleBtn.classList.toggle("is-active", state.shuffleOn);
+      const cur = currentSong();
       if (state.shuffleOn && state.currentQueue.length > 1) {
-        const cur = currentSong();
-        const rest = state.currentQueue.filter(s => s.id !== cur?.id);
-        for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
-        state.currentQueue = cur ? [cur, ...rest] : rest;
-        state.currentIndex = cur ? 0 : -1;
+        // Snapshot if we don't already have one (e.g. queue was loaded before shuffle existed)
+        if (!state.unshuffledQueue.length) state.unshuffledQueue = state.currentQueue.slice();
+        const curIdx = cur ? state.currentQueue.findIndex(s => s.id === cur.id) : 0;
+        state.currentQueue = shuffleQueueWithFirst(state.currentQueue, curIdx);
+        state.currentIndex = 0;
+      } else if (!state.shuffleOn && state.unshuffledQueue.length) {
+        // Restore the original order; find the currently-playing song's new position.
+        state.currentQueue = state.unshuffledQueue.slice();
+        const newIdx = cur ? state.currentQueue.findIndex(s => s.id === cur.id) : 0;
+        state.currentIndex = newIdx >= 0 ? newIdx : 0;
       }
+      updateShuffleUI();
+      if (state.currentPage === "queue") renderQueueWithDrag();
       toast(state.shuffleOn ? "Shuffle on" : "Shuffle off");
       persistSettings({ shuffle_enabled: state.shuffleOn });
     }
@@ -3065,7 +3101,7 @@
       const settings = loadSettings();
       state.repeatMode = settings.repeat_mode || "off";
       state.shuffleOn = !!settings.shuffle_enabled;
-      dom.shuffleBtn.classList.toggle("is-active", state.shuffleOn);
+      updateShuffleUI();
       dom.repeatBtn.classList.toggle("is-active", state.repeatMode !== "off");
       renderSidebarPlaylists();
       renderFavorites();
@@ -3919,7 +3955,7 @@
       $("npFavBtn").innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${active ? "#ico-heart" : "#ico-heart-outline"}"/></svg> ${active ? "Liked" : "Like"}`;
     }
     function updateNpControls() {
-      $("npShuffle").classList.toggle("is-active", state.shuffleOn);
+      updateShuffleUI();
       $("npRepeat").classList.toggle("is-active", state.repeatMode !== "off");
       $("npRepeat").innerHTML = `<svg style="width:20px;height:20px;fill:currentColor"><use href="${state.repeatMode === 'one' ? '#ico-repeat-one' : '#ico-repeat'}"/></svg>`;
       $("npPlayPause").innerHTML = `<svg style="width:24px;height:24px;fill:currentColor"><use href="${audio.paused ? '#ico-play' : '#ico-pause'}"/></svg>`;
