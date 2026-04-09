@@ -1791,6 +1791,10 @@
         </div>
         <div class="topbar-actions">
           <button id="topbarRefresh" title="Refresh">&#8635;</button>
+          <button id="topbarAuthBtn" title="Account" style="display:flex;align-items:center;gap:8px;background:var(--bg-elevated);color:var(--text);padding:6px 12px 6px 6px;border-radius:20px;border:none;cursor:pointer;">
+            <span id="topbarAvatar" style="width:28px;height:28px;border-radius:50%;background:var(--accent);color:#000;display:grid;place-items:center;font-weight:700;font-size:0.85rem;">?</span>
+            <span id="topbarUserName" style="font-size:0.85rem;font-weight:600;">Sign in</span>
+          </button>
         </div>
       </div>
 
@@ -2891,6 +2895,15 @@
 
     async function playSongAt(index, queue) {
       if (!queue?.length || !queue[index]) return;
+      // Login gate — block playback until signed in.
+      if (!state.user) {
+        toast("Sign in to play music");
+        dom.emailInput.value = "";
+        $("passwordInput").value = "";
+        dom.authMessage.textContent = "";
+        dom.authModal.classList.remove("hidden");
+        return;
+      }
       const prevSrc = audio.dataset.blobUrl || "";
       if (prevSrc) URL.revokeObjectURL(prevSrc);
 
@@ -3347,14 +3360,19 @@
 
     // ── AUTH ──
     function updateAuthUI() {
-      if (state.user) {
-        dom.userName.textContent = state.user.name;
-        dom.userAvatar.textContent = state.user.name[0].toUpperCase();
-      } else {
-        dom.userName.textContent = "Sign in";
-        dom.userAvatar.textContent = "?";
-      }
+      const name = state.user ? state.user.name : "Sign in";
+      const initial = state.user ? state.user.name[0].toUpperCase() : "?";
+      dom.userName.textContent = name;
+      dom.userAvatar.textContent = initial;
+      const tbName = $("topbarUserName");
+      const tbAvatar = $("topbarAvatar");
+      if (tbName) tbName.textContent = name;
+      if (tbAvatar) tbAvatar.textContent = initial;
     }
+
+    // Topbar sign-in button — duplicates sidebar trigger so iPhone users
+    // (no sidebar visible) have a way to sign in.
+    $("topbarAuthBtn").onclick = () => dom.authTrigger.click();
 
     dom.authTrigger.onclick = () => {
       if (state.user) {
