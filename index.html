@@ -2039,8 +2039,8 @@
 
     // ── CONFIG ──
     const API_ENDPOINTS = [
-      "https://jiosavan-api2.vercel.app/api",
-      "https://jiosaavn-apii.zameelraja.workers.dev/api"
+      "https://jiosaavn-proxy.zameelraja.workers.dev/api",
+      "https://jiosavan-api2.vercel.app/api"
     ];
     let API_BASE = API_ENDPOINTS[0];
 
@@ -3496,9 +3496,8 @@
     function renderHomeCard(item) {
       const card = document.createElement("div");
       card.className = "card";
-      const sub = item.type === "album"
-        ? (item.subtitle || "Album")
-        : (item.songCount ? item.songCount + " songs" : "Playlist");
+      const sub = item.subtitle
+        || (item.songCount ? item.songCount + " songs" : (item.type === "album" ? "Album" : "Playlist"));
       card.innerHTML = `
         <div class="card-art">
           ${item.image ? `<img src="${item.image}" alt="${item.title}" loading="lazy">` : ""}
@@ -3590,8 +3589,152 @@
       if (!renderedAny) showError("Couldn't load homepage. Try again.");
     }
 
+    // ── HOME: REAL JIOSAAVN MODULES (via Cloudflare Worker proxy) ──
+    // Calls /api/modules which proxies content.getHomepageData on jiosaavn.com.
+    // Returns the literal homepage the JioSaavn app shows: 40 new_albums, 30 featured
+    // playlists, 22+ charts. Language preference is sent via the proxy as a Cookie header.
+    function bumpImageQuality(url) {
+      // JioSaavn CDN serves images at *-150x150.jpg / *-50x50.jpg by default. Bump to 500x500.
+      return (url || "")
+        .replace(/-150x150\./, "-500x500.")
+        .replace(/-50x50\./, "-500x500.");
+    }
+
+    function normalizeModuleAlbum(a) {
+      const lang = (a.language || "").toLowerCase();
+      const langCap = lang ? lang[0].toUpperCase() + lang.slice(1) : "";
+      const year = a.year || a.more_info?.release_date?.slice(0, 4) || "";
+      const sub = year && langCap ? `${year} \u2022 ${langCap}` : (langCap ? `${langCap} Album` : "Album");
+      return {
+        id: a.id,
+        type: "album",
+        title: decode(a.title || a.name || ""),
+        image: bumpImageQuality(typeof a.image === "string" ? a.image : (Array.isArray(a.image) ? a.image[a.image.length - 1]?.url : "")),
+        subtitle: sub,
+        language: lang
+      };
+    }
+
+    function normalizeModulePlaylist(p) {
+      const subRaw = p.subtitle || (p.more_info?.song_count ? `${p.more_info.song_count} songs` : "Playlist");
+      return {
+        id: p.id,
+        type: "playlist",
+        title: decode(p.title || p.name || ""),
+        image: bumpImageQuality(typeof p.image === "string" ? p.image : (Array.isArray(p.image) ? p.image[p.image.length - 1]?.url : "")),
+        subtitle: decode(subRaw),
+        language: (p.language || "").toLowerCase()
+      };
+    }
+
+    async function fetchHomeModules() {
+      // The proxy reads ?language= and forwards it as a Cookie header to jiosaavn.com,
+      // which biases the homepage modules toward those languages.
+      const langs = state.userLangs.length ? state.userLangs : ["english", "hindi"];
+      const url = `/modules?language=${encodeURIComponent(langs.join(","))}`;
+      const r = await apiFetch(url);
+      // The worker /api/modules path returns the raw jiosaavn payload (top-level keys
+      // like new_albums, featured_playlists, charts). Validate before using.
+      if (!r || (!r.new_albums && !r.featured_playlists)) throw new Error("modules: empty");
+      return r;
+    }
+
+    async function loadHomeFromModules() {
+      const data = await fetchHomeModules();
+      const newAlbums = (data.new_albums || []).map(normalizeModuleAlbum).filter(a => a.id && a.image);
+      const playlists = (data.featured_playlists || []).map(normalizeModulePlaylist).filter(p => p.id && p.image);
+      const charts = (data.charts || []).map(normalizeModulePlaylist).filter(c => c.id && c.image);
+
+      const userLangs = state.userLangs.length ? state.userLangs : ["english", "hindi"];
+
+      // Build sections: for each preferred language, surface that language's new albums
+      // and charts as their own section. Then JioSaavn editorial picks. Then leftover
+      // languages at the bottom.
+      const sections = [];
+      const usedAlbumIds = new Set();
+      const usedChartIds = new Set();
+
+      const langTitle = {
+        tamil: "Tamil", hindi: "Hindi", english: "English",
+        malayalam: "Malayalam", telugu: "Telugu", kannada: "Kannada",
+        punjabi: "Punjabi", marathi: "Marathi", bengali: "Bengali",
+        gujarati: "Gujarati", urdu: "Urdu", spanish: "Spanish", korean: "Korean"
+      };
+
+      for (const lang of userLangs) {
+        const albumsForLang = newAlbums.filter(a => a.language === lang && !usedAlbumIds.has(a.id));
+        if (albumsForLang.length) {
+          albumsForLang.forEach(a => usedAlbumIds.add(a.id));
+          sections.push({
+            title: `New ${langTitle[lang] || lang} Releases`,
+            items: albumsForLang.slice(0, 12)
+          });
+        }
+        const chartsForLang = charts.filter(c => c.language === lang && !usedChartIds.has(c.id));
+        if (chartsForLang.length) {
+          chartsForLang.forEach(c => usedChartIds.add(c.id));
+          sections.push({
+            title: `${langTitle[lang] || lang} Charts`,
+            items: chartsForLang.slice(0, 12)
+          });
+        }
+      }
+
+      // JioSaavn editorial picks — featured playlists, mixed languages.
+      if (playlists.length) {
+        sections.push({ title: "Featured on JioSaavn", items: playlists.slice(0, 12) });
+        if (playlists.length > 12) {
+          sections.push({ title: "More for You", items: playlists.slice(12, 24) });
+        }
+      }
+
+      // Leftover albums in languages not in user prefs (international content at the bottom).
+      const leftoverAlbums = newAlbums.filter(a => !usedAlbumIds.has(a.id));
+      if (leftoverAlbums.length) {
+        sections.push({ title: "New Releases Worldwide", items: leftoverAlbums.slice(0, 12) });
+      }
+      const leftoverCharts = charts.filter(c => !usedChartIds.has(c.id));
+      if (leftoverCharts.length) {
+        sections.push({ title: "More Charts", items: leftoverCharts.slice(0, 12) });
+      }
+
+      if (!sections.length) throw new Error("modules: nothing to render");
+
+      // Render directly — no skeleton-then-replace dance since we have everything in one shot.
+      const container = $("homeSections");
+      container.innerHTML = "";
+      sections.forEach(section => {
+        const sectionEl = document.createElement("div");
+        sectionEl.style.marginBottom = "36px";
+        sectionEl.innerHTML = `<div class="section-header"><h3>${section.title}</h3></div>`;
+        const grid = document.createElement("div");
+        grid.className = "card-grid";
+        section.items.forEach(item => grid.appendChild(renderHomeCard(item)));
+        sectionEl.appendChild(grid);
+        container.appendChild(sectionEl);
+      });
+      showHome();
+    }
+
     async function loadInitial(force = false) {
-      await loadHomeSections();
+      showSkeleton();
+      updateGreeting();
+      // Wait briefly for geolocation so the modules call is biased correctly on first load.
+      if (!state.userLangs.length && state.locationStatus === "requesting") {
+        await Promise.race([
+          new Promise(r => {
+            const check = () => state.locationStatus !== "requesting" ? r() : setTimeout(check, 100);
+            check();
+          }),
+          new Promise(r => setTimeout(r, 1500))
+        ]);
+      }
+      try {
+        await loadHomeFromModules();
+      } catch (err) {
+        console.warn("Modules homepage failed, falling back to catalog:", err.message);
+        await loadHomeSections();
+      }
     }
 
     dom.retryBtn.onclick = () => loadInitial(true);
