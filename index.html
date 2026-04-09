@@ -1696,6 +1696,7 @@
       .recent-card img { width: 50px; height: 50px; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -1873,6 +1874,8 @@
         <div class="pl-header-controls">
           <button class="pl-shuffle-play" id="favShufflePlay" title="Shuffle play"><svg><use href="#ico-play"/></svg></button>
           <button class="ctrl-btn" id="favShuffleToggle" title="Shuffle" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+          <div style="flex:1"></div>
+          <button class="ctrl-btn" id="librarySyncBtn" title="Sync library across devices" style="opacity:1;color:var(--text-sub);font-size:0.78rem;width:auto;padding:0 12px;border-radius:16px;border:1px solid var(--text-sub)">Sync</button>
         </div>
         <div id="favoritesList" class="song-list"></div>
         <div id="libraryPlaylistsSection" style="margin-top:32px;display:none;">
@@ -2072,6 +2075,13 @@
       "https://jiosavan-api2.vercel.app/api"
     ];
     let API_BASE = API_ENDPOINTS[0];
+
+    // Supabase — cloud sync for playlists & favorites across devices
+    const SUPABASE_URL = "https://yorbapspeyoxiwtdmtro.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvcmJhcHNwZXlveGl3dGRtdHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MzE2NjAsImV4cCI6MjA5MTMwNzY2MH0.COPt4l-h3UNNk3JN3NihhIbmBwicBgBp1G8APlnT7Co";
+    const sb = (window.supabase && window.supabase.createClient)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+      : null;
 
     const USERS = [
       { email: "zameelraja@gmail.com", hash: "330cef933befbb1c3cd545c99a403efe3ef043391eaefb0869907591352732cd", name: "Zameel" },
@@ -2279,6 +2289,121 @@
     function loadPlaylists() {
       state.playlists = safeParse(localStorage.getItem(userKey("playlists")), []);
       state.playlistSongs = safeParse(localStorage.getItem(userKey("playlistSongs")), {});
+    }
+
+    // ── CLOUD SYNC (Supabase) ──
+    // Strategy: localStorage is the fast cache. On login we pull from cloud
+    // and merge (cloud wins for matching IDs since it's latest-write). On
+    // every save we also push to cloud (fire-and-forget). Shared playlists
+    // use a fixed pseudo-email so both users see them.
+    const SHARED_EMAIL = "__shared__";
+
+    async function pullFromCloud() {
+      if (!sb || !state.user) return;
+      try {
+        const email = state.user.email;
+        // Pull this user's playlists + all shared playlists
+        const { data: pls, error: plErr } = await sb
+          .from("isai_playlists")
+          .select("*")
+          .or(`user_email.eq.${email},user_email.eq.${SHARED_EMAIL}`);
+        if (plErr) throw plErr;
+
+        const cloudPlaylists = [];
+        const cloudPlaylistSongs = {};
+        (pls || []).forEach(row => {
+          cloudPlaylists.push({
+            id: row.id,
+            name: row.name,
+            cover_song: row.cover_song,
+            is_shared: row.is_shared
+          });
+          cloudPlaylistSongs[row.id] = row.songs || [];
+        });
+
+        // Merge: cloud wins for IDs that exist in both, local-only IDs survive
+        const localIds = new Set(state.playlists.map(p => p.id));
+        const cloudIds = new Set(cloudPlaylists.map(p => p.id));
+        // Keep local playlists that aren't in the cloud yet (will be pushed)
+        const localOnly = state.playlists.filter(p => !cloudIds.has(p.id));
+        state.playlists = [...cloudPlaylists, ...localOnly];
+        cloudPlaylists.forEach(p => { state.playlistSongs[p.id] = cloudPlaylistSongs[p.id]; });
+        savePlaylists();
+
+        // Pull favorites
+        const { data: favs, error: favErr } = await sb
+          .from("isai_favorites")
+          .select("*")
+          .eq("user_email", email);
+        if (favErr) throw favErr;
+        const cloudFavIds = new Set((favs || []).map(f => f.song_id));
+        const cloudFavs = (favs || []).map(f => ({ song_id: f.song_id, song: f.song }));
+        const localOnlyFavs = state.favorites.filter(f => !cloudFavIds.has(f.song_id));
+        state.favorites = [...cloudFavs, ...localOnlyFavs];
+        saveFavorites();
+
+        // Push anything that was local-only so the other devices see it
+        for (const pl of localOnly) await pushPlaylistToCloud(pl);
+        for (const f of localOnlyFavs) await pushFavoriteToCloud(f);
+
+        renderSidebarPlaylists();
+        renderFavorites();
+      } catch (err) {
+        console.warn("[sync] pull failed:", err.message || err);
+      }
+    }
+
+    async function pushPlaylistToCloud(pl) {
+      if (!sb || !state.user) return;
+      try {
+        await sb.from("isai_playlists").upsert({
+          id: pl.id,
+          user_email: pl.is_shared ? SHARED_EMAIL : state.user.email,
+          name: pl.name,
+          cover_song: pl.cover_song || null,
+          is_shared: !!pl.is_shared,
+          songs: state.playlistSongs[pl.id] || [],
+          updated_at: new Date().toISOString()
+        });
+      } catch (err) { console.warn("[sync] push playlist failed:", err.message || err); }
+    }
+
+    async function deletePlaylistFromCloud(plId) {
+      if (!sb) return;
+      try { await sb.from("isai_playlists").delete().eq("id", plId); }
+      catch (err) { console.warn("[sync] delete playlist failed:", err.message || err); }
+    }
+
+    async function pushFavoriteToCloud(fav) {
+      if (!sb || !state.user) return;
+      try {
+        await sb.from("isai_favorites").upsert({
+          user_email: state.user.email,
+          song_id: fav.song_id,
+          song: fav.song
+        });
+      } catch (err) { console.warn("[sync] push favorite failed:", err.message || err); }
+    }
+
+    async function deleteFavoriteFromCloud(songId) {
+      if (!sb || !state.user) return;
+      try {
+        await sb.from("isai_favorites")
+          .delete()
+          .eq("user_email", state.user.email)
+          .eq("song_id", songId);
+      } catch (err) { console.warn("[sync] delete favorite failed:", err.message || err); }
+    }
+
+    async function manualSync() {
+      if (!sb) { toast("Cloud sync unavailable"); return; }
+      if (!state.user) { toast("Sign in to sync"); return; }
+      toast("Syncing...");
+      // Push everything local first, then pull
+      for (const pl of state.playlists) await pushPlaylistToCloud(pl);
+      for (const f of state.favorites) await pushFavoriteToCloud(f);
+      await pullFromCloud();
+      toast("Synced");
     }
     function savePlaylists() {
       localStorage.setItem(userKey("playlists"), JSON.stringify(state.playlists));
@@ -2992,9 +3117,11 @@
       if (exists) {
         state.favorites = state.favorites.filter(f => f.song_id !== song.id);
         toast("Removed from Liked Songs");
+        deleteFavoriteFromCloud(song.id);
       } else {
         state.favorites.unshift({ song_id: song.id, song });
         toast("Added to Liked Songs");
+        pushFavoriteToCloud({ song_id: song.id, song });
       }
       saveFavorites();
       updateNowFav();
@@ -3048,6 +3175,7 @@
       state.playlists.push(pl);
       state.playlistSongs[pl.id] = [];
       savePlaylists();
+      pushPlaylistToCloud(pl);
       renderSidebarPlaylists();
       return pl;
     }
@@ -3056,6 +3184,7 @@
       state.playlists = state.playlists.filter(p => p.id !== id);
       delete state.playlistSongs[id];
       savePlaylists();
+      deletePlaylistFromCloud(id);
       renderSidebarPlaylists();
     }
 
@@ -3074,6 +3203,7 @@
         sharedSongs[plId] = state.playlistSongs[plId];
         saveSharedPlaylists(sharedPls, sharedSongs);
       }
+      if (pl) pushPlaylistToCloud(pl);
       renderSidebarPlaylists();
     }
 
@@ -3081,6 +3211,8 @@
       if (!state.playlistSongs[plId]) return;
       state.playlistSongs[plId] = state.playlistSongs[plId].filter(s => s.id !== songId);
       savePlaylists();
+      const pl = state.playlists.find(p => p.id === plId);
+      if (pl) pushPlaylistToCloud(pl);
     }
 
     function openPlaylistModal(song = null) {
@@ -3259,6 +3391,7 @@
       dom.authModal.classList.add("hidden");
       updateAuthUI();
       loadUserData();
+      pullFromCloud();
       toast(`Welcome back, ${found.name}!`);
     };
 
@@ -4329,6 +4462,7 @@
       playSongAt(Math.floor(Math.random() * songs.length), songs);
     };
     $("favShuffleToggle").onclick = () => toggleShuffle();
+    $("librarySyncBtn").onclick = () => manualSync();
 
     // Location banner — gesture-triggered geolocation request (iOS PWA needs this)
     $("locationBannerBtn").onclick = async () => {
@@ -4347,6 +4481,8 @@
         loadUserData();
         loadSharedData();
         renderSidebarPlaylists();
+        // Pull cloud data on login (fire-and-forget; merges with local cache)
+        pullFromCloud();
       } else {
         renderFavorites();
         renderDownloads();
