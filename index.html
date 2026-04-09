@@ -1955,8 +1955,11 @@
           <button class="ctrl-btn" id="librarySyncBtn" title="Sync library across devices" style="opacity:1;color:var(--text-sub);font-size:0.78rem;width:auto;padding:0 12px;border-radius:16px;border:1px solid var(--text-sub)">Sync</button>
         </div>
         <div id="favoritesList" class="song-list"></div>
-        <div id="libraryPlaylistsSection" style="margin-top:32px;display:none;">
-          <h3 style="margin:0 0 16px;font-size:1.25rem;">Your Playlists</h3>
+        <div id="libraryPlaylistsSection" style="margin-top:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;">
+            <h3 style="margin:0;font-size:1.25rem;">Your Playlists</h3>
+            <button id="libraryCreatePlaylistBtn" title="Create playlist" aria-label="Create playlist" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--text);font-size:1.5rem;line-height:1;border:none;background:var(--bg-elevated);cursor:pointer;flex-shrink:0;padding:0;">+</button>
+          </div>
           <div id="libraryPlaylistsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;"></div>
         </div>
       </section>
@@ -3409,6 +3412,7 @@
 
     dom.plCancel.onclick = () => dom.playlistModal.classList.add("hidden");
     $("sidebarCreatePlaylist").onclick = () => openPlaylistModal();
+    $("libraryCreatePlaylistBtn").onclick = () => openPlaylistModal();
 
     // ── PERSIST SETTINGS ──
     function persistSettings(partial) {
@@ -3655,9 +3659,12 @@
       const section = $("libraryPlaylistsSection");
       const grid = $("libraryPlaylistsGrid");
       if (!section || !grid) return;
-      if (!state.playlists.length) { section.style.display = "none"; return; }
       section.style.display = "block";
       grid.innerHTML = "";
+      if (!state.playlists.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;color:var(--text-sub);font-size:0.9rem;padding:8px 0;">No playlists yet — tap <strong>+</strong> to create one.</div>`;
+        return;
+      }
       state.playlists.forEach(pl => {
         const songs = state.playlistSongs[pl.id] || [];
         const cover = pl.cover_song?.image || songs[0]?.image || "";
