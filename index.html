@@ -802,10 +802,26 @@
       color: var(--text-sub);
       font-size: 1rem;
       transition: all 0.15s;
+      position: relative;
     }
 
     .ctrl-btn:hover { color: var(--text); transform: scale(1.06); }
     .ctrl-btn.is-active { color: var(--accent); }
+    /* Spotify-style green dot under active shuffle/repeat buttons */
+    #shuffleBtn.is-active::after,
+    #repeatBtn.is-active::after,
+    #npShuffle.is-active::after,
+    #npRepeat.is-active::after,
+    #favShuffleToggle.is-active::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
 
     .ctrl-btn.play-btn {
       width: 36px; height: 36px;
@@ -2461,10 +2477,9 @@
         switchPage("playlistView");
         $("plViewPlay").onclick = () => playSongAt(0, songs);
         $("plViewShuffle").onclick = () => {
-          const shuffled = [...songs];
-          for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-          state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
-          playSongAt(0, shuffled);
+          if (!songs.length) return;
+          if (!state.shuffleOn) { state.shuffleOn = true; updateShuffleUI(); persistSettings({ shuffle_enabled: true }); }
+          playSongAt(Math.floor(Math.random() * songs.length), songs);
         };
       } catch {
         toast("Failed to load album");
@@ -3554,10 +3569,9 @@
           switchPage("playlistView");
           $("plViewPlay").onclick = () => playSongAt(0, songs);
           $("plViewShuffle").onclick = () => {
-            const shuffled = [...songs];
-            for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-            state.shuffleOn = true; dom.shuffleBtn.classList.add("is-active");
-            playSongAt(0, shuffled);
+            if (!songs.length) return;
+            if (!state.shuffleOn) { state.shuffleOn = true; updateShuffleUI(); persistSettings({ shuffle_enabled: true }); }
+            playSongAt(Math.floor(Math.random() * songs.length), songs);
           };
         }
       } catch (err) {
@@ -4288,12 +4302,8 @@
     $("favShufflePlay").onclick = () => {
       const songs = state.favorites.map(f => enrichSong(f.song));
       if (!songs.length) { toast("No liked songs yet"); return; }
-      // Shuffle the songs
-      const shuffled = [...songs];
-      for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
-      state.shuffleOn = true;
-      dom.shuffleBtn.classList.add("is-active");
-      playSongAt(0, shuffled);
+      if (!state.shuffleOn) { state.shuffleOn = true; updateShuffleUI(); persistSettings({ shuffle_enabled: true }); }
+      playSongAt(Math.floor(Math.random() * songs.length), songs);
     };
     $("favShuffleToggle").onclick = () => toggleShuffle();
 
