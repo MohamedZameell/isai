@@ -2300,7 +2300,8 @@
 
     const USERS = [
       { email: "zameelraja@gmail.com", hash: "330cef933befbb1c3cd545c99a403efe3ef043391eaefb0869907591352732cd", name: "Zameel" },
-      { email: "fmfaaiz@gmail.com", hash: "b5160b3968069e91319d7842734e4b966d0007f97bbfeb7a26fa4b5653419c74", name: "Faaiz" }
+      { email: "fmfaaiz@gmail.com", hash: "b5160b3968069e91319d7842734e4b966d0007f97bbfeb7a26fa4b5653419c74", name: "Faaiz" },
+      { email: "shihan@gmail.com", hash: "8d5b9e2747afc4ea9fbb51060725812e00af805825a20442dc5788b7030324f5", name: "Shihan" }
     ];
 
     async function sha256(text) {
@@ -2947,6 +2948,10 @@
         switchPage(state.pageForward.pop(), false);
       }
     };
+
+    // Logo click → home
+    document.querySelector(".sidebar-logo").onclick = () => switchPage("home");
+    document.querySelector(".sidebar-logo").style.cursor = "pointer";
 
     // Sidebar nav clicks
     document.querySelectorAll(".sidebar-nav-item").forEach(b => {
