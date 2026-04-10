@@ -768,6 +768,19 @@
     .skeleton-text.w60 { width: 60%; }
     .skeleton-text.w40 { width: 40%; }
 
+    /* Skeleton song rows */
+    .skeleton-song-row {
+      display: grid;
+      grid-template-columns: 16px 44px 1fr 40px;
+      gap: 12px;
+      padding: 10px 16px;
+      align-items: center;
+    }
+    .skeleton-song-row .sk-num { width: 16px; height: 14px; }
+    .skeleton-song-row .sk-art { width: 44px; height: 44px; border-radius: var(--radius-sm); }
+    .skeleton-song-row .sk-info { display: flex; flex-direction: column; gap: 6px; }
+    .skeleton-song-row .sk-dur { width: 32px; height: 14px; }
+
     /* ── NOW PLAYING PLAYER BAR ── */
     .player-bar {
       grid-row: 2;
@@ -1212,7 +1225,7 @@
       .song-row { grid-template-columns: 40px 1fr auto; gap: 12px; padding: 10px 12px; min-height: 56px; }
       .song-row .row-num { display: none; }
       .song-row .row-art { width: 40px; height: 40px; }
-      .action-btn { opacity: 1; width: 32px; height: 32px; } /* Bigger touch target */
+      .action-btn { opacity: 1; width: 44px; height: 44px; } /* Apple HIG 44pt minimum */
 
       /* ── MOBILE PLAYER BAR ── */
       .player-bar {
@@ -1259,7 +1272,7 @@
         flex-shrink: 0;
       }
       .player-mobile-ctrls button {
-        width: 40px; height: 40px;
+        width: 44px; height: 44px;
         border-radius: 50%;
         display: grid; place-items: center;
         color: var(--text);
@@ -1339,7 +1352,7 @@
       .np-info .np-artist { font-size: 0.85rem; }
       .np-progress { padding: 20px 24px 8px; }
       .np-controls { gap: 20px; padding: 12px 0; }
-      .np-controls .np-ctrl { width: 36px; height: 36px; }
+      .np-controls .np-ctrl { width: 44px; height: 44px; }
       .np-controls .np-ctrl.np-play { width: 56px; height: 56px; }
       .np-controls .np-ctrl.np-play svg { width: 22px; height: 22px; }
       .np-extra { gap: 20px; padding: 8px 0 12px; }
@@ -1368,6 +1381,48 @@
     @keyframes pageFadeIn {
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── REDUCED MOTION ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .now-playing-overlay { transition: none; }
+      .card .card-play { transition: none; }
+      .np-bg-blur { transition: none; }
+    }
+
+    /* ── OFFLINE BANNER ── */
+    .offline-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: var(--error);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+    .offline-banner.visible { transform: translateY(0); }
+    .offline-banner button {
+      background: rgba(255,255,255,0.2);
+      color: var(--text);
+      border: none;
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     /* ── EQUALIZER BARS ── */
@@ -1404,6 +1459,18 @@
       align-items: center;
       transition: transform 0.35s cubic-bezier(.32,.72,.24,1), opacity 0.3s;
       overflow-y: auto;
+    }
+    .np-bg-blur {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-size: cover;
+      background-position: center;
+      filter: blur(80px) saturate(1.8) brightness(0.35);
+      transform: scale(1.3);
+      opacity: 0.7;
+      transition: background-image 0.6s ease;
+      pointer-events: none;
     }
     .now-playing-overlay.hidden {
       display: flex !important;
@@ -1578,6 +1645,17 @@
     .np-lyrics .lyrics-text.loading {
       color: var(--text-muted);
       font-style: italic;
+    }
+    .np-lyrics .lyrics-text .lyric-line {
+      transition: color 0.3s, transform 0.3s, font-size 0.3s;
+      padding: 4px 0;
+      cursor: pointer;
+    }
+    .np-lyrics .lyrics-text .lyric-line.active {
+      color: var(--text);
+      font-size: 1.25rem;
+      font-weight: 600;
+      transform: scale(1.02);
     }
 
     /* ── SLEEP TIMER MENU ── */
@@ -1987,7 +2065,10 @@
 
       <!-- QUEUE PAGE -->
       <section id="queuePage" class="page">
-        <div class="page-header"><h2>Queue</h2><p>Next in your listening session</p></div>
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+          <div><h2>Queue</h2><p>Next in your listening session</p></div>
+          <button id="clearQueueBtn" class="btn-ghost" style="font-size:0.82rem;color:var(--text-sub);padding:8px 16px" aria-label="Clear queue">Clear</button>
+        </div>
         <div id="queueList" class="song-list"></div>
       </section>
     </div>
@@ -2005,22 +2086,22 @@
           <div class="now-artist" id="nowArtist">Your music home</div>
         </div>
         <div class="now-actions">
-          <button id="nowFavBtn" title="Like"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-heart-outline"/></svg></button>
+          <button id="nowFavBtn" title="Like" aria-label="Like this song"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-heart-outline"/></svg></button>
         </div>
       </div>
       <!-- Mobile mini controls (visible only on mobile via CSS) -->
       <div class="player-mobile-ctrls" id="playerMobileCtrls" style="display:none;">
-        <button id="mobPlayPause" title="Play/Pause"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-play"/></svg></button>
-        <button id="mobNextBtn" title="Next"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-next"/></svg></button>
+        <button id="mobPlayPause" title="Play/Pause" aria-label="Play or pause"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-play"/></svg></button>
+        <button id="mobNextBtn" title="Next" aria-label="Next track"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-next"/></svg></button>
       </div>
 
       <div class="player-center">
         <div class="player-controls">
-          <button class="ctrl-btn" id="shuffleBtn" title="Shuffle"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
-          <button class="ctrl-btn" id="prevBtn" title="Previous"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-prev"/></svg></button>
-          <button class="ctrl-btn play-btn" id="playPauseBtn" title="Play"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-play"/></svg></button>
-          <button class="ctrl-btn" id="nextBtn" title="Next"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-next"/></svg></button>
-          <button class="ctrl-btn" id="repeatBtn" title="Repeat"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-repeat"/></svg></button>
+          <button class="ctrl-btn" id="shuffleBtn" title="Shuffle" aria-label="Toggle shuffle"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+          <button class="ctrl-btn" id="prevBtn" title="Previous" aria-label="Previous track"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-prev"/></svg></button>
+          <button class="ctrl-btn play-btn" id="playPauseBtn" title="Play" aria-label="Play or pause"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-play"/></svg></button>
+          <button class="ctrl-btn" id="nextBtn" title="Next" aria-label="Next track"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-next"/></svg></button>
+          <button class="ctrl-btn" id="repeatBtn" title="Repeat" aria-label="Cycle repeat mode"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-repeat"/></svg></button>
         </div>
         <div class="progress-bar">
           <span class="time left" id="currentTime">0:00</span>
@@ -2034,7 +2115,7 @@
       </div>
 
       <div class="player-right">
-        <button class="vol-btn" id="volBtn"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-vol"/></svg></button>
+        <button class="vol-btn" id="volBtn" aria-label="Toggle mute"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-vol"/></svg></button>
         <div class="volume-track" id="volumeTrack">
           <div class="volume-fill" id="volumeFill" style="width:100%"></div>
         </div>
@@ -2045,13 +2126,13 @@
   <!-- MOBILE NAV -->
   <nav class="mobile-nav">
     <div class="mobile-nav-inner">
-      <button class="mobile-nav-btn active" data-page="home">
+      <button class="mobile-nav-btn active" data-page="home" aria-label="Home">
         <svg><use href="#ico-home"/></svg>Home
       </button>
-      <button class="mobile-nav-btn" data-page="search">
+      <button class="mobile-nav-btn" data-page="search" aria-label="Search">
         <svg><use href="#ico-search"/></svg>Search
       </button>
-      <button class="mobile-nav-btn" data-page="favorites">
+      <button class="mobile-nav-btn" data-page="favorites" aria-label="Library">
         <svg><use href="#ico-heart"/></svg>Library
       </button>
     </div>
@@ -2097,8 +2178,9 @@
 
   <!-- FULL-SCREEN NOW PLAYING -->
   <div class="now-playing-overlay hidden" id="nowPlayingOverlay">
+    <div class="np-bg-blur" id="npBgBlur"></div>
     <div class="np-header">
-      <button id="npClose" title="Close">&#8595;</button>
+      <button id="npClose" aria-label="Close now playing" title="Close">&#8595;</button>
       <span class="np-source" id="npSource">Now Playing</span>
       <button id="npSleepBtn" title="Sleep timer">&#9202;</button>
     </div>
@@ -2121,21 +2203,27 @@
       </div>
     </div>
     <div class="np-controls">
-      <button class="np-ctrl" id="npShuffle"><svg><use href="#ico-shuffle"/></svg></button>
-      <button class="np-ctrl" id="npPrev"><svg><use href="#ico-prev"/></svg></button>
-      <button class="np-ctrl np-play" id="npPlayPause"><svg><use href="#ico-play"/></svg></button>
-      <button class="np-ctrl" id="npNext"><svg><use href="#ico-next"/></svg></button>
-      <button class="np-ctrl" id="npRepeat"><svg><use href="#ico-repeat"/></svg></button>
+      <button class="np-ctrl" id="npShuffle" aria-label="Toggle shuffle"><svg><use href="#ico-shuffle"/></svg></button>
+      <button class="np-ctrl" id="npPrev" aria-label="Previous track"><svg><use href="#ico-prev"/></svg></button>
+      <button class="np-ctrl np-play" id="npPlayPause" aria-label="Play or pause"><svg><use href="#ico-play"/></svg></button>
+      <button class="np-ctrl" id="npNext" aria-label="Next track"><svg><use href="#ico-next"/></svg></button>
+      <button class="np-ctrl" id="npRepeat" aria-label="Cycle repeat mode"><svg><use href="#ico-repeat"/></svg></button>
     </div>
     <div class="np-extra">
-      <button id="npFavBtn"><svg><use href="#ico-heart-outline"/></svg> Like</button>
-      <button id="npQueueBtn"><svg><use href="#ico-queue"/></svg> Queue</button>
-      <button id="npLyricsToggle"><svg><use href="#ico-library"/></svg> Lyrics</button>
+      <button id="npFavBtn" aria-label="Like this song"><svg><use href="#ico-heart-outline"/></svg> Like</button>
+      <button id="npQueueBtn" aria-label="Open queue"><svg><use href="#ico-queue"/></svg> Queue</button>
+      <button id="npLyricsToggle" aria-label="Toggle lyrics"><svg><use href="#ico-library"/></svg> Lyrics</button>
     </div>
     <div class="np-lyrics hidden" id="npLyrics">
       <div class="lyrics-label">Lyrics</div>
       <div class="lyrics-text loading" id="npLyricsText">Loading lyrics...</div>
     </div>
+  </div>
+
+  <!-- OFFLINE BANNER -->
+  <div class="offline-banner" id="offlineBanner" role="alert" aria-live="assertive">
+    <span>You're offline</span>
+    <button id="offlineRetryBtn" aria-label="Retry connection">Retry</button>
   </div>
 
   <!-- TOAST -->
@@ -2355,6 +2443,11 @@
       dom.toast.classList.toggle("error", type === "error");
       dom.toast.classList.add("show");
       setTimeout(() => dom.toast.classList.remove("show"), type === "error" ? 4500 : 2500);
+    }
+
+    // Haptic feedback (Android only — no-op on iOS)
+    function haptic(ms = 10) {
+      try { if (navigator.vibrate) navigator.vibrate(ms); } catch {}
     }
 
     // ── STORAGE (per-user localStorage) ──
@@ -2728,6 +2821,10 @@
 
     async function fetchAndPlayAlbum(albumId) {
       try {
+        // Show skeleton while loading
+        switchPage("playlistView");
+        dom.playlistViewHeader.innerHTML = `<div class="skeleton" style="height:80px;width:100%;border-radius:8px"></div>`;
+        showSongListSkeleton(dom.playlistViewSongs, 8);
         const al = await apiFetch(`/albums?id=${encodeURIComponent(albumId)}`);
         const data = al?.data || {};
         let rawSongs = (data.songs || []).map(normalizeSong);
@@ -2890,6 +2987,18 @@
       return row;
     }
 
+    function showSongListSkeleton(target, count = 6) {
+      target.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        target.innerHTML += `<div class="skeleton-song-row">
+          <div class="skeleton sk-num"></div>
+          <div class="skeleton sk-art"></div>
+          <div class="sk-info"><div class="skeleton skeleton-text w60"></div><div class="skeleton skeleton-text w40"></div></div>
+          <div class="skeleton sk-dur"></div>
+        </div>`;
+      }
+    }
+
     function renderSongList(target, songs, queue) {
       target.innerHTML = "";
       if (!songs.length) {
@@ -2969,9 +3078,10 @@
       menu.innerHTML = "";
 
       const items = [
-        { label: isFav(song.id) ? "Remove from Liked" : "Add to Liked", action: () => toggleFav(song) },
-        { label: "Add to Queue", action: () => { addToQueue(song); toast("Added to queue"); } },
-        { label: isDl(song.id) ? "Remove Download" : "Download", action: () => toggleDownload(song) },
+        { label: isFav(song.id) ? "Remove from Liked" : "Add to Liked", action: () => { haptic(); toggleFav(song); } },
+        { label: "Play Next", action: () => { haptic(); playNext(song); toast("Playing next"); } },
+        { label: "Add to Queue", action: () => { haptic(); addToQueue(song); toast("Added to queue"); } },
+        { label: isDl(song.id) ? "Remove Download" : "Download", action: () => { haptic(); toggleDownload(song); } },
       ];
 
       // If viewing a playlist, offer remove
@@ -3097,10 +3207,19 @@
       fetchLyrics(song);
 
       if ("mediaSession" in navigator) {
+        const artSizes = [96, 128, 192, 256, 384, 512];
+        const artworkList = song.image ? artSizes.map(s => ({
+          src: song.image.replace(/-\d+x\d+\./, `-${s}x${s}.`),
+          sizes: `${s}x${s}`, type: "image/jpeg"
+        })) : [];
         navigator.mediaSession.metadata = new MediaMetadata({
           title: song.title, artist: song.artist, album: song.album,
-          artwork: song.image ? [{ src: song.image, sizes: "500x500", type: "image/jpeg" }] : []
+          artwork: artworkList
         });
+        navigator.mediaSession.playbackState = "playing";
+        if (audio.duration) {
+          navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: audio.playbackRate });
+        }
       }
       persistSettings({ last_song_id: song.id, last_song: song });
     }
@@ -3130,6 +3249,26 @@
     function addToQueue(song) {
       state.currentQueue.push(enrichSong(song));
       if (state.currentPage === "queue") renderQueue();
+    }
+
+    function playNext(song) {
+      const enriched = enrichSong(song);
+      const insertAt = state.currentIndex + 1;
+      state.currentQueue.splice(insertAt, 0, enriched);
+      if (state.currentPage === "queue") renderQueue();
+    }
+
+    function clearQueue() {
+      const cur = currentSong();
+      if (cur) {
+        state.currentQueue = [cur];
+        state.currentIndex = 0;
+      } else {
+        state.currentQueue = [];
+        state.currentIndex = -1;
+      }
+      if (state.currentPage === "queue") renderQueue();
+      toast("Queue cleared");
     }
 
     function updateShuffleUI() {
@@ -3179,6 +3318,12 @@
       // Now playing overlay
       $("npFill").style.width = pct + "%";
       $("npCurrent").textContent = fmt(audio.currentTime);
+      // MediaSession position state
+      if ("mediaSession" in navigator && audio.duration > 0) {
+        try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: audio.playbackRate }); } catch {}
+      }
+      // Synced lyrics highlight
+      if (state.syncedLyrics && state.syncedLyrics.length) highlightSyncedLyric(audio.currentTime);
     };
 
     audio.onloadedmetadata = () => { dom.totalTime.textContent = fmt(audio.duration); $("npTotal").textContent = fmt(audio.duration); };
@@ -3207,11 +3352,11 @@
     };
 
     // Controls
-    dom.playPauseBtn.onclick = () => { if (audio.src) { audio.paused ? audio.play() : audio.pause(); } else if (state.songs.length) playSongAt(0, state.songs); };
-    dom.nextBtn.onclick = () => skipNext(true);
-    dom.prevBtn.onclick = () => skipPrev();
-    dom.shuffleBtn.onclick = toggleShuffle;
-    dom.repeatBtn.onclick = cycleRepeat;
+    dom.playPauseBtn.onclick = () => { haptic(); if (audio.src) { audio.paused ? audio.play() : audio.pause(); } else if (state.songs.length) playSongAt(0, state.songs); };
+    dom.nextBtn.onclick = () => { haptic(); skipNext(true); };
+    dom.prevBtn.onclick = () => { haptic(); skipPrev(); };
+    dom.shuffleBtn.onclick = () => { haptic(); toggleShuffle(); };
+    dom.repeatBtn.onclick = () => { haptic(); cycleRepeat(); };
 
     // Mobile progress bar & mini controls
     function updateMobileUI() {
@@ -3227,11 +3372,11 @@
 
     // Mobile mini play/pause
     $("mobPlayPause").onclick = (e) => {
-      e.stopPropagation();
+      e.stopPropagation(); haptic();
       if (audio.src) { audio.paused ? audio.play() : audio.pause(); }
       else if (state.songs.length) playSongAt(0, state.songs);
     };
-    $("mobNextBtn").onclick = (e) => { e.stopPropagation(); skipNext(true); };
+    $("mobNextBtn").onclick = (e) => { e.stopPropagation(); haptic(); skipNext(true); };
 
     // Update mobile play button on play/pause
     function updateMobPlayBtn(playing) {
@@ -3249,6 +3394,12 @@
       // always shows next/previous track buttons.
       try { navigator.mediaSession.setActionHandler("seekbackward", null); } catch (e) {}
       try { navigator.mediaSession.setActionHandler("seekforward", null); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler("seekto", (details) => {
+        if (details.seekTime != null && audio.duration) audio.currentTime = details.seekTime;
+      }); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler("stop", () => {
+        audio.pause(); audio.currentTime = 0; updatePlayBtn(false); updateNpControls(); updateMobPlayBtn(false);
+      }); } catch (e) {}
     }
 
     // Keyboard shortcuts
@@ -3869,6 +4020,9 @@
 
     async function fetchAndPlayPlaylist(playlistId) {
       try {
+        switchPage("playlistView");
+        dom.playlistViewHeader.innerHTML = `<div class="skeleton" style="height:80px;width:100%;border-radius:8px"></div>`;
+        showSongListSkeleton(dom.playlistViewSongs, 8);
         const pl = await apiFetch(`/playlists?id=${encodeURIComponent(playlistId)}`);
         let rawSongs = (pl?.data?.songs || []).map(normalizeSong);
         rawSongs = await enrichMissingSrc(rawSongs);
@@ -4324,6 +4478,8 @@
       $("npTitle").textContent = song.title;
       $("npArtist").textContent = song.artist;
       $("npTotal").textContent = fmt(song.duration);
+      // Blurred artwork backdrop
+      $("npBgBlur").style.backgroundImage = song.image ? `url(${song.image})` : "none";
       updateNpFav();
       updateNpControls();
     }
@@ -4353,12 +4509,12 @@
 
     // Now playing click handlers
     $("npClose").onclick = closeNowPlaying;
-    $("npPlayPause").onclick = () => { if (audio.src) { audio.paused ? audio.play() : audio.pause(); } updateNpControls(); };
-    $("npNext").onclick = () => skipNext(true);
-    $("npPrev").onclick = () => skipPrev();
-    $("npShuffle").onclick = () => { toggleShuffle(); updateNpControls(); };
-    $("npRepeat").onclick = () => { cycleRepeat(); updateNpControls(); };
-    $("npFavBtn").onclick = () => { const s = currentSong(); if (s) toggleFav(s); updateNpFav(); };
+    $("npPlayPause").onclick = () => { haptic(); if (audio.src) { audio.paused ? audio.play() : audio.pause(); } updateNpControls(); };
+    $("npNext").onclick = () => { haptic(); skipNext(true); };
+    $("npPrev").onclick = () => { haptic(); skipPrev(); };
+    $("npShuffle").onclick = () => { haptic(); toggleShuffle(); updateNpControls(); };
+    $("npRepeat").onclick = () => { haptic(); cycleRepeat(); updateNpControls(); };
+    $("npFavBtn").onclick = () => { haptic(); const s = currentSong(); if (s) toggleFav(s); updateNpFav(); };
     $("npQueueBtn").onclick = () => { closeNowPlaying(); switchPage("queue"); };
 
     // Now playing progress seek
@@ -4376,23 +4532,126 @@
       if (currentSong()) openNowPlaying();
     });
 
-    // Also update now playing on play/pause
-    audio.onplay = () => { updatePlayBtn(true); updateNpControls(); updateMobPlayBtn(true); refreshActiveSongRows(); };
-    audio.onpause = () => { updatePlayBtn(false); updateNpControls(); updateMobPlayBtn(false); refreshActiveSongRows(); };
+    // Swipe-up on mini-player to expand NP overlay
+    (function initPlayerSwipe() {
+      const bar = $("playerBar");
+      let startY = 0, startX = 0;
+      bar.addEventListener("touchstart", (e) => { startY = e.touches[0].clientY; startX = e.touches[0].clientX; }, { passive: true });
+      bar.addEventListener("touchend", (e) => {
+        const dy = e.changedTouches[0].clientY - startY;
+        const dx = Math.abs(e.changedTouches[0].clientX - startX);
+        if (dy < -40 && dx < 80 && currentSong()) { haptic(); openNowPlaying(); }
+      }, { passive: true });
+    })();
 
-    // ── LYRICS ──
+    // Swipe-down on NP overlay to dismiss
+    (function initNpSwipe() {
+      const overlay = $("nowPlayingOverlay");
+      let startY = 0, startX = 0, dragging = false;
+      overlay.addEventListener("touchstart", (e) => {
+        if (e.target.closest(".np-track, .np-lyrics")) return;
+        startY = e.touches[0].clientY; startX = e.touches[0].clientX; dragging = true;
+      }, { passive: true });
+      overlay.addEventListener("touchmove", (e) => {
+        if (!dragging) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy > 0 && overlay.scrollTop <= 0) {
+          overlay.style.transform = `translateY(${Math.min(dy * 0.5, 200)}px)`;
+          overlay.style.transition = "none";
+        }
+      }, { passive: true });
+      overlay.addEventListener("touchend", (e) => {
+        if (!dragging) return;
+        dragging = false;
+        const dy = e.changedTouches[0].clientY - startY;
+        const dx = Math.abs(e.changedTouches[0].clientX - startX);
+        overlay.style.transition = "";
+        overlay.style.transform = "";
+        if (dy > 80 && dx < 120) { haptic(); closeNowPlaying(); }
+      }, { passive: true });
+    })();
+
+    // Also update now playing on play/pause
+    audio.onplay = () => {
+      updatePlayBtn(true); updateNpControls(); updateMobPlayBtn(true); refreshActiveSongRows();
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+    };
+    audio.onpause = () => {
+      updatePlayBtn(false); updateNpControls(); updateMobPlayBtn(false); refreshActiveSongRows();
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+    };
+
+    // ── LYRICS (with synced-lyrics support) ──
     let currentLyricsId = null;
+    // Synced lyrics state: array of { time: seconds, text: string } or null
+    state.syncedLyrics = null;
+
+    function parseSyncedLyrics(raw) {
+      // Detect [mm:ss.xx] timestamps in raw text/HTML
+      const text = raw.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+      const lines = text.split("\n");
+      const parsed = [];
+      const re = /^\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]\s*(.*)$/;
+      for (const line of lines) {
+        const m = line.trim().match(re);
+        if (m) {
+          const secs = parseInt(m[1]) * 60 + parseInt(m[2]) + (m[3] ? parseInt(m[3].padEnd(3, "0")) / 1000 : 0);
+          if (m[4].trim()) parsed.push({ time: secs, text: m[4].trim() });
+        }
+      }
+      return parsed.length >= 3 ? parsed : null; // need at least 3 lines to be meaningful
+    }
+
+    function renderSyncedLyrics(lines) {
+      const el = $("npLyricsText");
+      el.className = "lyrics-text";
+      el.innerHTML = lines.map((l, i) =>
+        `<div class="lyric-line" data-lyric-idx="${i}" data-lyric-time="${l.time}">${l.text}</div>`
+      ).join("");
+      // Click-to-seek
+      el.querySelectorAll(".lyric-line").forEach(div => {
+        div.onclick = () => {
+          const t = parseFloat(div.dataset.lyricTime);
+          if (audio.duration && t >= 0) audio.currentTime = t;
+        };
+      });
+    }
+
+    function highlightSyncedLyric(currentTime) {
+      const lines = state.syncedLyrics;
+      if (!lines || !lines.length) return;
+      let activeIdx = 0;
+      for (let i = lines.length - 1; i >= 0; i--) {
+        if (currentTime >= lines[i].time) { activeIdx = i; break; }
+      }
+      const container = $("npLyricsText");
+      const divs = container.querySelectorAll(".lyric-line");
+      divs.forEach((d, i) => d.classList.toggle("active", i === activeIdx));
+      // Scroll active line into view
+      const activeDiv = divs[activeIdx];
+      if (activeDiv && !$("npLyrics").classList.contains("hidden")) {
+        activeDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
     async function fetchLyrics(song) {
       const lyricsText = $("npLyricsText");
       currentLyricsId = song.id;
+      state.syncedLyrics = null;
       lyricsText.className = "lyrics-text loading";
       lyricsText.textContent = "Loading lyrics...";
       try {
         const data = await apiFetch(`/songs/${song.id}/lyrics`);
         if (currentLyricsId !== song.id) return;
         if (data?.data?.lyrics) {
-          lyricsText.className = "lyrics-text";
-          lyricsText.innerHTML = data.data.lyrics;
+          const synced = parseSyncedLyrics(data.data.lyrics);
+          if (synced) {
+            state.syncedLyrics = synced;
+            renderSyncedLyrics(synced);
+          } else {
+            lyricsText.className = "lyrics-text";
+            lyricsText.innerHTML = data.data.lyrics;
+          }
         } else {
           lyricsText.className = "lyrics-text loading";
           lyricsText.textContent = "No lyrics available for this song";
@@ -4523,6 +4782,47 @@
         dom.queueList.appendChild(row);
       });
     }
+    // Swipe-to-remove for queue items (mobile)
+    function addSwipeToRemove(row, queueIndex) {
+      let sx = 0, sy = 0, swiping = false;
+      row.addEventListener("touchstart", (e) => {
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY; swiping = true;
+      }, { passive: true });
+      row.addEventListener("touchmove", (e) => {
+        if (!swiping) return;
+        const dx = e.touches[0].clientX - sx;
+        const dy = Math.abs(e.touches[0].clientY - sy);
+        if (dy > 30) { swiping = false; row.style.transform = ""; row.style.opacity = ""; return; }
+        if (Math.abs(dx) > 10) {
+          row.style.transform = `translateX(${dx}px)`;
+          row.style.opacity = `${Math.max(0, 1 - Math.abs(dx) / 200)}`;
+          row.style.transition = "none";
+        }
+      }, { passive: true });
+      row.addEventListener("touchend", (e) => {
+        if (!swiping) return;
+        swiping = false;
+        const dx = e.changedTouches[0].clientX - sx;
+        if (Math.abs(dx) > 100) {
+          row.style.transition = "transform 0.2s, opacity 0.2s";
+          row.style.transform = `translateX(${dx > 0 ? 300 : -300}px)`;
+          row.style.opacity = "0";
+          setTimeout(() => {
+            state.currentQueue.splice(queueIndex, 1);
+            if (queueIndex < state.currentIndex) state.currentIndex--;
+            else if (queueIndex === state.currentIndex) { state.currentIndex = Math.min(state.currentIndex, state.currentQueue.length - 1); }
+            haptic();
+            renderQueue();
+            toast("Removed from queue");
+          }, 200);
+        } else {
+          row.style.transition = "transform 0.2s, opacity 0.2s";
+          row.style.transform = "";
+          row.style.opacity = "";
+        }
+      }, { passive: true });
+    }
+
     // Override renderQueue to use drag version with Now Playing section
     renderQueue = function() {
       dom.queueList.innerHTML = "";
@@ -4574,6 +4874,8 @@
             else if (from > state.currentIndex && to <= state.currentIndex) state.currentIndex++;
             renderQueue();
           });
+          // Swipe-to-remove (mobile)
+          addSwipeToRemove(row, realIndex);
           nextSection.appendChild(row);
         });
         dom.queueList.appendChild(nextSection);
@@ -4628,6 +4930,8 @@
     }
 
     // ── FAVORITES SHUFFLE PLAY ──
+    $("clearQueueBtn").onclick = () => { haptic(); clearQueue(); };
+
     $("favShufflePlay").onclick = () => {
       const songs = state.favorites.map(f => enrichSong(f.song));
       if (!songs.length) { toast("No liked songs yet"); return; }
@@ -4655,6 +4959,32 @@
       if (state.locationStatus === "denied") state.locationStatus = "idle";
       await ensureLocation();
     };
+
+    // ── OFFLINE / NETWORK-ERROR BANNER ──
+    function updateOfflineBanner() {
+      const banner = $("offlineBanner");
+      if (!navigator.onLine) {
+        banner.classList.add("visible");
+      } else {
+        banner.classList.remove("visible");
+      }
+    }
+    window.addEventListener("online", () => { updateOfflineBanner(); toast("Back online"); });
+    window.addEventListener("offline", updateOfflineBanner);
+    $("offlineRetryBtn").onclick = async () => {
+      try {
+        // Ping the API to check connectivity
+        await fetch(API_BASE.replace("/api", ""), { method: "HEAD", mode: "no-cors" });
+        updateOfflineBanner();
+        if (navigator.onLine) {
+          toast("Connection restored");
+          if (state.currentPage === "home") loadInitial(true);
+        }
+      } catch {
+        toast("Still offline — check your connection", "error");
+      }
+    };
+    updateOfflineBanner();
 
     // ── INIT ──
     (async () => {
