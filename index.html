@@ -3497,8 +3497,8 @@
       // iOS chooses between seek (±10s) and skip (prev/next) based on which
       // handlers are registered. Explicitly disable seek so the lock screen
       // always shows next/previous track buttons.
-      try { navigator.mediaSession.setActionHandler("seekbackward", null); } catch (e) {}
-      try { navigator.mediaSession.setActionHandler("seekforward", null); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler("seekbackward", () => skipPrev()); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler("seekforward", () => skipNext(true)); } catch (e) {}
       try { navigator.mediaSession.setActionHandler("seekto", (details) => {
         if (details.seekTime != null && audio.duration) audio.currentTime = details.seekTime;
       }); } catch (e) {}
