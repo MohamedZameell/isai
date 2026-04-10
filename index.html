@@ -3322,9 +3322,11 @@
           artwork: artworkList
         });
         navigator.mediaSession.playbackState = "playing";
-        if (audio.duration) {
-          navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: audio.playbackRate });
-        }
+        // Re-assert prev/next and suppress seek on every song change (iOS resets on metadata set)
+        navigator.mediaSession.setActionHandler("previoustrack", () => skipPrev());
+        navigator.mediaSession.setActionHandler("nexttrack", () => skipNext(true));
+        try { navigator.mediaSession.setActionHandler("seekbackward", null); } catch {}
+        try { navigator.mediaSession.setActionHandler("seekforward", null); } catch {}
       }
       persistSettings({ last_song_id: song.id, last_song: song });
     }
@@ -3423,10 +3425,7 @@
       // Now playing overlay
       $("npFill").style.width = pct + "%";
       $("npCurrent").textContent = fmt(audio.currentTime);
-      // MediaSession position state
-      if ("mediaSession" in navigator && audio.duration > 0) {
-        try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: audio.currentTime, playbackRate: audio.playbackRate }); } catch {}
-      }
+      // MediaSession position state — skipped to prevent iOS showing seek ±10s buttons
       // Synced lyrics highlight
       if (state.syncedLyrics && state.syncedLyrics.length) highlightSyncedLyric(audio.currentTime);
     };
@@ -3497,8 +3496,8 @@
       // iOS chooses between seek (±10s) and skip (prev/next) based on which
       // handlers are registered. Explicitly disable seek so the lock screen
       // always shows next/previous track buttons.
-      try { navigator.mediaSession.setActionHandler("seekbackward", () => skipPrev()); } catch (e) {}
-      try { navigator.mediaSession.setActionHandler("seekforward", () => skipNext(true)); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler("seekbackward", null); } catch (e) {}
+      try { navigator.mediaSession.setActionHandler("seekforward", null); } catch (e) {}
       try { navigator.mediaSession.setActionHandler("seekto", (details) => {
         if (details.seekTime != null && audio.duration) audio.currentTime = details.seekTime;
       }); } catch (e) {}
