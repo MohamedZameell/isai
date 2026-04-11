@@ -4448,6 +4448,33 @@
         container.appendChild(sectionEl);
       });
       showHome();
+
+      // Background: validate album cards and remove dead ones
+      const albumItems = sections.flatMap(s => s.items).filter(i => i.type === "album");
+      const alreadyDead = new Set(getDeadAlbums());
+      const unchecked = albumItems.filter(a => !alreadyDead.has(a.id));
+      if (unchecked.length) validateAlbumsInBackground(unchecked);
+    }
+
+    async function validateAlbumsInBackground(albums) {
+      // Check 4 at a time to avoid hammering the API
+      for (let i = 0; i < albums.length; i += 4) {
+        const batch = albums.slice(i, i + 4);
+        await Promise.all(batch.map(async (a) => {
+          try {
+            const r = await apiFetch(`/albums?id=${encodeURIComponent(a.id)}`);
+            const songs = r?.data?.songs || [];
+            const hasPlayable = songs.some(s => {
+              const dls = Array.isArray(s.downloadUrl) ? s.downloadUrl : [];
+              return dls.some(d => d.url);
+            });
+            if (!hasPlayable) {
+              markDeadAlbum(a.id);
+              removeDeadFromHome();
+            }
+          } catch {}
+        }));
+      }
     }
 
     async function loadInitial(force = false) {
