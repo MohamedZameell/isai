@@ -2911,11 +2911,7 @@
                 break;
               }
             }
-            // If exact title match failed, take first result with src
-            if (!byId.has(s.id) && results.length) {
-              const n = normalizeSong(results[0]);
-              if (n.src) byId.set(s.id, { ...n, id: s.id });
-            }
+            // Only use exact or close title matches — never substitute a random song
           } catch {}
         }));
       }
@@ -3251,14 +3247,14 @@
           if (n.src) { song.src = n.src; return n.src; }
         }
       } catch {}
-      // Last resort: search by title
+      // Last resort: search by title — only accept if title matches
       try {
         const q = `${song.title} ${song.artist}`.trim();
         if (q) {
-          const r = await apiFetch(`/search/songs?query=${encodeURIComponent(q)}&limit=3`);
+          const r = await apiFetch(`/search/songs?query=${encodeURIComponent(q)}&limit=5`);
           for (const raw of (r?.data?.results || [])) {
             const n = normalizeSong(raw);
-            if (n.src) { song.src = n.src; return n.src; }
+            if (n.src && n.title.toLowerCase() === song.title.toLowerCase()) { song.src = n.src; return n.src; }
           }
         }
       } catch {}
