@@ -2326,7 +2326,16 @@
     const CACHE_KEY = "isai_cache_v3";
     const AUTH_KEY = "isai_auth_v1";
     const LOC_KEY = "isai_location_v1";
+    const DEAD_KEY = "isai_dead_albums";
     const CACHE_TTL = 3600000;
+
+    function getDeadAlbums() {
+      try { return JSON.parse(localStorage.getItem(DEAD_KEY) || "[]"); } catch { return []; }
+    }
+    function markDeadAlbum(id) {
+      const list = getDeadAlbums();
+      if (!list.includes(id)) { list.push(id); localStorage.setItem(DEAD_KEY, JSON.stringify(list)); }
+    }
 
     // Map of country (and Indian states) to JioSaavn language tags, ordered by preference.
     // Used to bias search results so a Tamil-Nadu user gets Tamil songs first when they
@@ -2937,7 +2946,7 @@
             songs = (sr?.data?.results || []).map(normalizeSong).map(enrichSong);
           } catch {}
         }
-        if (!songs.length) { toast("No playable songs in album"); return; }
+        if (!songs.length) { markDeadAlbum(albumId); removeDeadFromHome(); toast("Album unavailable — hidden from homepage"); return; }
         state.songs = songs;
         const imgs = Array.isArray(data.image) ? data.image : [];
         const cover = (imgs.length ? imgs[imgs.length - 1]?.url : "") || songs[0]?.image || "";
@@ -4203,9 +4212,22 @@
       }
     }
 
+    function removeDeadFromHome() {
+      const dead = new Set(getDeadAlbums());
+      document.querySelectorAll(".card-grid .card").forEach(card => {
+        if (card._itemId && dead.has(card._itemId)) card.remove();
+      });
+      // Remove empty sections
+      document.querySelectorAll("#homeSections > div").forEach(sec => {
+        const grid = sec.querySelector(".card-grid");
+        if (grid && !grid.children.length) sec.remove();
+      });
+    }
+
     function renderHomeCard(item) {
       const card = document.createElement("div");
       card.className = "card";
+      card._itemId = item.id;
       const sub = item.subtitle
         || (item.songCount ? item.songCount + " songs" : (item.type === "album" ? "Album" : "Playlist"));
       card.innerHTML = `
@@ -4226,11 +4248,12 @@
     async function loadSectionItems(section) {
       const fetcher = section.mode === "album" ? fetchAlbumsBatch : fetchPlaylistsBatch;
       const lists = await Promise.all(section.queries.map(q => fetcher(q, 5)));
+      const dead = new Set(getDeadAlbums());
       const seen = new Set();
       const items = [];
       for (const list of lists) {
         for (const it of list) {
-          if (it && !seen.has(it.id)) { seen.add(it.id); items.push(it); }
+          if (it && !seen.has(it.id) && !dead.has(it.id)) { seen.add(it.id); items.push(it); }
           if (items.length >= 12) break;
         }
         if (items.length >= 12) break;
@@ -4351,7 +4374,8 @@
 
     async function loadHomeFromModules() {
       const data = await fetchHomeModules();
-      const newAlbums = (data.new_albums || []).map(normalizeModuleAlbum).filter(a => a.id && a.image);
+      const dead = new Set(getDeadAlbums());
+      const newAlbums = (data.new_albums || []).map(normalizeModuleAlbum).filter(a => a.id && a.image && !dead.has(a.id));
       const playlists = (data.featured_playlists || []).map(normalizeModulePlaylist).filter(p => p.id && p.image);
       const charts = (data.charts || []).map(normalizeModulePlaylist).filter(c => c.id && c.image);
 
