@@ -1540,14 +1540,23 @@
       flex-shrink: 0;
     }
     .np-header button {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      display: grid; place-items: center;
+      height: 36px;
+      min-width: 36px;
+      border-radius: var(--radius-full);
+      display: flex; align-items: center; justify-content: center; gap: 4px;
       color: var(--text-sub);
       font-size: 1.2rem;
       transition: all 0.15s;
+      padding: 0 6px;
     }
     .np-header button:hover { color: var(--text); background: var(--bg-highlight); }
+    .sleep-countdown {
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
     .np-header .np-source {
       font-size: 0.75rem;
       font-weight: 700;
@@ -2230,7 +2239,7 @@
     <div class="np-header">
       <button id="npClose" aria-label="Close now playing" title="Close">&#8595;</button>
       <span class="np-source" id="npSource">Now Playing</span>
-      <button id="npSleepBtn" title="Sleep timer">&#9202;</button>
+      <button id="npSleepBtn" title="Sleep timer"><span>&#9202;</span><span class="sleep-countdown hidden" id="sleepCountdown"></span></button>
     </div>
     <div class="np-art-wrap">
       <img id="npArt" src="" alt="">
@@ -4538,9 +4547,31 @@
     // ── SLEEP TIMER ──
     let sleepTimerId = null;
     let sleepEndTime = null;
+    let sleepCountdownId = null;
+    function updateSleepCountdown() {
+      const el = $("sleepCountdown");
+      if (!sleepEndTime) { el.classList.add("hidden"); el.textContent = ""; return; }
+      const left = Math.max(0, sleepEndTime - Date.now());
+      const m = Math.floor(left / 60000);
+      const s = Math.floor((left % 60000) / 1000);
+      el.textContent = m > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${s}s`;
+      el.classList.remove("hidden");
+    }
+    function startSleepCountdown() {
+      clearInterval(sleepCountdownId);
+      updateSleepCountdown();
+      sleepCountdownId = setInterval(updateSleepCountdown, 1000);
+    }
+    function stopSleepCountdown() {
+      clearInterval(sleepCountdownId);
+      sleepCountdownId = null;
+      const el = $("sleepCountdown");
+      el.classList.add("hidden");
+      el.textContent = "";
+    }
     function setSleepTimer(minutes) {
       clearTimeout(sleepTimerId);
-      if (!minutes) { sleepTimerId = null; sleepEndTime = null; toast("Sleep timer off"); return; }
+      if (!minutes) { sleepTimerId = null; sleepEndTime = null; stopSleepCountdown(); toast("Sleep timer off"); return; }
       sleepEndTime = Date.now() + minutes * 60000;
       sleepTimerId = setTimeout(() => {
         audio.pause();
@@ -4548,7 +4579,9 @@
         toast("Sleep timer — goodnight!");
         sleepTimerId = null;
         sleepEndTime = null;
+        stopSleepCountdown();
       }, minutes * 60000);
+      startSleepCountdown();
       toast(`Sleep timer: ${minutes} min`);
     }
     function showSleepMenu(anchorEl) {
