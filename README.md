@@ -16,7 +16,7 @@
 
 ## Why
 
-I wanted a music player that felt like mine — warm, no ads, no "upgrade to premium," just the music. Built for myself and two friends. One HTML file, no build step, ships via GitHub Pages.
+I wanted a music player that felt like mine — warm, no ads, no "upgrade to premium," just the music.
 
 ## Features
 
