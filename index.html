@@ -2757,6 +2757,24 @@
       return t.value;
     }
 
+    // Escape user/API strings for safe interpolation into innerHTML.
+    // decode() unescapes API entities; anything that flows back into innerHTML must
+    // re-escape via this helper to prevent XSS.
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    // Escape URLs for safe use as href/src and reject javascript: schemes.
+    function escapeAttr(url) {
+      const s = String(url == null ? "" : url);
+      if (/^\s*javascript:/i.test(s)) return "";
+      return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+    }
+
     function safeParse(val, fallback) {
       try { const r = JSON.parse(val); return r != null ? r : fallback; }
       catch { return fallback; }
@@ -3553,12 +3571,12 @@
       }
       dom.featuredBanner.classList.remove("hidden");
       dom.featuredBanner.innerHTML = `
-        ${pl.image ? `<img class="banner-art" src="${pl.image}" alt="">` : ""}
+        ${pl.image ? `<img class="banner-art" src="${escapeAttr(pl.image)}" alt="">` : ""}
         <div class="banner-gradient"></div>
         <div class="banner-content">
           <div class="banner-label">Featured Playlist</div>
-          <div class="banner-title">${pl.title}</div>
-          <div class="banner-sub">${pl.subtitle || "Curated for you"}</div>
+          <div class="banner-title">${escapeHtml(pl.title)}</div>
+          <div class="banner-sub">${escapeHtml(pl.subtitle || "Curated for you")}</div>
           <div class="banner-play"><svg><use href="#ico-play"/></svg></div>
         </div>
       `;
@@ -3576,10 +3594,10 @@
       row.dataset.songId = song.id;
       row.innerHTML = `
         <span class="row-num" data-idx="${index + 1}"><span class="num-text">${index + 1}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span></span>
-        <div class="row-art">${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : ""}</div>
+        <div class="row-art">${song.image ? `<img src="${escapeAttr(song.image)}" alt="" loading="lazy">` : ""}</div>
         <div class="row-info" role="button" tabindex="0">
-          <div class="row-title">${song.title}</div>
-          <div class="row-artist">${song.artist}</div>
+          <div class="row-title">${escapeHtml(song.title)}</div>
+          <div class="row-artist">${escapeHtml(song.artist)}</div>
         </div>
         <div class="row-actions">
           <button class="action-btn${isFav(song.id) ? " is-active" : ""}" data-act="fav" title="Like">
@@ -3701,9 +3719,9 @@
         btn.dataset.page = "playlistView";
         btn.dataset.plId = pl.id;
         btn.innerHTML = `
-          <div class="pl-icon">${cover ? `<img src="${cover}" alt="">` : ""}</div>
+          <div class="pl-icon">${cover ? `<img src="${escapeAttr(cover)}" alt="">` : ""}</div>
           <div class="pl-info">
-            <div class="pl-name">${pl.name}</div>
+            <div class="pl-name">${escapeHtml(pl.name)}</div>
             <div class="pl-meta">Playlist \u2022 ${songs.length} songs</div>
           </div>
         `;
@@ -3894,6 +3912,9 @@
       // Crossfade
       if (state.crossfade && !audio.paused && audio.currentTime > 0) {
         crossfadeTo(src);
+        // crossfadeTo eventually reassigns audio.src; track the blob so the next
+        // playSongAt revokes it and we don't leak.
+        audio.dataset.blobUrl = src.startsWith("blob:") ? src : "";
       } else {
         audio.dataset.blobUrl = src.startsWith("blob:") ? src : "";
         audio.src = src;
@@ -4458,7 +4479,7 @@
           const btn = document.createElement("button");
           btn.className = "song-row";
           btn.style.cursor = "pointer";
-          btn.innerHTML = `<span></span><div class="row-art" style="width:40px;height:40px;"></div><div class="row-info"><div class="row-title">${pl.name}</div><div class="row-artist">${(state.playlistSongs[pl.id] || []).length} songs</div></div><div></div>`;
+          btn.innerHTML = `<span></span><div class="row-art" style="width:40px;height:40px;"></div><div class="row-info"><div class="row-title">${escapeHtml(pl.name)}</div><div class="row-artist">${(state.playlistSongs[pl.id] || []).length} songs</div></div><div></div>`;
           btn.onclick = async () => { await addSongToPlaylist(pl.id, song); closeModal(dom.playlistModal); toast(`Added to ${pl.name}`); };
           dom.plPickerList.appendChild(btn);
         });
@@ -4889,9 +4910,9 @@
         card.style.cssText = "background:var(--bg-elevated);border:none;border-radius:8px;padding:12px;cursor:pointer;text-align:left;color:inherit;transition:background 0.2s;";
         card.innerHTML = `
           <div style="width:100%;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--bg-base);margin-bottom:10px;display:grid;place-items:center;">
-            ${cover ? `<img src="${cover}" alt="" style="width:100%;height:100%;object-fit:cover">` : `<svg style="width:36px;height:36px;fill:var(--text-sub)"><use href="#ico-library"/></svg>`}
+            ${cover ? `<img src="${escapeAttr(cover)}" alt="" style="width:100%;height:100%;object-fit:cover">` : `<svg style="width:36px;height:36px;fill:var(--text-sub)"><use href="#ico-library"/></svg>`}
           </div>
-          <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${pl.name}</div>
+          <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(pl.name)}</div>
           <div style="font-size:0.75rem;color:var(--text-sub);margin-top:2px;">${songs.length} song${songs.length === 1 ? "" : "s"}</div>
         `;
         card.onclick = () => openPlaylistView(pl);
@@ -5168,11 +5189,11 @@
               : "Playlist"));
       card.innerHTML = `
         <div class="card-art">
-          ${item.image ? `<img src="${item.image}" alt="${item.title}" loading="lazy">` : ""}
+          ${item.image ? `<img src="${escapeAttr(item.image)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ""}
           ${showOverlay ? `<div class="card-play"><svg><use href="#ico-play"/></svg></div>` : ""}
         </div>
-        <div class="card-title">${item.title}</div>
-        <div class="card-sub">${sub}</div>
+        <div class="card-title">${escapeHtml(item.title)}</div>
+        <div class="card-sub">${escapeHtml(sub)}</div>
       `;
       card.onclick = () => {
         if (item.type === "album") fetchAndPlayAlbum(item.id);
@@ -5578,7 +5599,7 @@
       sectionEl.dataset.sectionKey = "more-like";
       sectionEl.style.marginBottom = "36px";
       const seedTitle = (seed.title || "").length > 24 ? seed.title.slice(0, 24) + "…" : (seed.title || "your last play");
-      sectionEl.innerHTML = `<div class="section-header"><h3>More like ${seedTitle}</h3></div>`;
+      sectionEl.innerHTML = `<div class="section-header"><h3>More like ${escapeHtml(seedTitle)}</h3></div>`;
       const grid = document.createElement("div");
       grid.className = "card-grid";
       songs.forEach(song => {
@@ -5786,6 +5807,7 @@
     // Per-song play count keyed by song id; song meta stored alongside so the "On Repeat"
     // row can render without a separate lookup.
     function getPlayCounts() { return safeParse(localStorage.getItem(userKey("playCounts")), {}); }
+    const PLAY_COUNT_CAP = 1000;
     function incrementPlayCount(song) {
       if (!song?.id) return;
       const counts = getPlayCounts();
@@ -5795,7 +5817,26 @@
         last: Date.now(),
         meta: { id: song.id, title: song.title, artist: song.artist, image: song.image, src: song.src, duration: song.duration, album: song.album }
       };
-      localStorage.setItem(userKey("playCounts"), JSON.stringify(counts));
+      // Cap growth: when over the cap, evict lowest-count entries (ties broken by oldest last).
+      const ids = Object.keys(counts);
+      if (ids.length > PLAY_COUNT_CAP) {
+        const sorted = ids
+          .map(id => ({ id, count: counts[id].count || 0, last: counts[id].last || 0 }))
+          .sort((a, b) => (a.count - b.count) || (a.last - b.last));
+        const drop = sorted.slice(0, ids.length - PLAY_COUNT_CAP);
+        for (const e of drop) delete counts[e.id];
+      }
+      try {
+        localStorage.setItem(userKey("playCounts"), JSON.stringify(counts));
+      } catch (err) {
+        // Quota exceeded — drop half and retry once
+        const halved = Object.fromEntries(
+          Object.entries(counts)
+            .sort((a, b) => (b[1].count - a[1].count) || ((b[1].last || 0) - (a[1].last || 0)))
+            .slice(0, Math.floor(PLAY_COUNT_CAP / 2))
+        );
+        try { localStorage.setItem(userKey("playCounts"), JSON.stringify(halved)); } catch {}
+      }
     }
     function getTopPlayed(limit = 8) {
       const counts = getPlayCounts();
@@ -5818,7 +5859,7 @@
         card.setAttribute("role", "button");
         card.tabIndex = 0;
         card.setAttribute("aria-label", `Play ${song.title}`);
-        card.innerHTML = `${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : '<div style="width:56px;height:56px;background:var(--bg-elevated)"></div>'}<span class="rc-title">${song.title}</span>`;
+        card.innerHTML = `${song.image ? `<img src="${escapeAttr(song.image)}" alt="" loading="lazy">` : '<div style="width:56px;height:56px;background:var(--bg-elevated)"></div>'}<span class="rc-title">${escapeHtml(song.title)}</span>`;
         card.onclick = () => playSong(song, [song]);
         grid.appendChild(card);
       });
@@ -6075,15 +6116,18 @@
     function renderSyncedLyrics(lines) {
       const el = $("npLyricsText");
       el.className = "lyrics-text";
-      el.innerHTML = lines.map((l, i) =>
-        `<div class="lyric-line" data-lyric-idx="${i}" data-lyric-time="${l.time}">${l.text}</div>`
-      ).join("");
-      // Click-to-seek
-      el.querySelectorAll(".lyric-line").forEach(div => {
+      el.innerHTML = "";
+      lines.forEach((l, i) => {
+        const div = document.createElement("div");
+        div.className = "lyric-line";
+        div.dataset.lyricIdx = String(i);
+        div.dataset.lyricTime = String(l.time);
+        div.textContent = l.text || "";
         div.onclick = () => {
           const t = parseFloat(div.dataset.lyricTime);
           if (audio.duration && t >= 0) audio.currentTime = t;
         };
+        el.appendChild(div);
       });
     }
 
@@ -6465,18 +6509,18 @@
         const songRow = (e, i) => `
           <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bg-elevated);">
             <span style="width:18px;color:var(--text-sub);font-size:0.78rem;">${i + 1}</span>
-            ${e.meta.image ? `<img src="${e.meta.image}" alt="" style="width:36px;height:36px;border-radius:4px;object-fit:cover;">` : `<div style="width:36px;height:36px;border-radius:4px;background:var(--bg-elevated);"></div>`}
+            ${e.meta.image ? `<img src="${escapeAttr(e.meta.image)}" alt="" style="width:36px;height:36px;border-radius:4px;object-fit:cover;">` : `<div style="width:36px;height:36px;border-radius:4px;background:var(--bg-elevated);"></div>`}
             <div style="flex:1;min-width:0;">
-              <div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.meta.title}</div>
-              <div style="font-size:0.74rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.meta.artist || ""}</div>
+              <div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(e.meta.title)}</div>
+              <div style="font-size:0.74rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(e.meta.artist || "")}</div>
             </div>
             <span style="color:var(--accent);font-size:0.78rem;font-weight:600;">${e.count}×</span>
           </div>`;
         const artistRow = (a, i) => `
           <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--bg-elevated);">
             <span style="width:18px;color:var(--text-sub);font-size:0.78rem;">${i + 1}</span>
-            ${a.image ? `<img src="${a.image}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">` : `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);"></div>`}
-            <div style="flex:1;min-width:0;font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.name}</div>
+            ${a.image ? `<img src="${escapeAttr(a.image)}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">` : `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);"></div>`}
+            <div style="flex:1;min-width:0;font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.name)}</div>
             <span style="color:var(--accent);font-size:0.78rem;font-weight:600;">${a.plays} plays</span>
           </div>`;
         body.innerHTML = `
