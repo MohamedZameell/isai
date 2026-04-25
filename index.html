@@ -1455,8 +1455,38 @@
       .modal { max-width: 100%; padding: 24px; }
       .modal input { font-size: 16px; } /* Prevent Safari zoom */
 
-      /* Context menu on mobile */
-      .context-menu { left: 16px !important; right: 16px; width: auto; }
+      /* Context menu becomes a bottom sheet on mobile */
+      .context-menu {
+        left: 0 !important;
+        right: 0;
+        top: auto !important;
+        bottom: 0;
+        width: 100%;
+        min-width: 0;
+        padding: 8px 8px calc(12px + var(--safe-bottom));
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -16px 48px rgba(0,0,0,0.6), 0 0 0 1px var(--divider);
+        background: rgba(22,20,28,0.96);
+        animation: sheetSlideUp 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+      .context-menu::before {
+        content: "";
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: rgba(255,255,255,0.25);
+        border-radius: 2px;
+        margin: 4px auto 8px;
+      }
+      .context-menu button {
+        padding: 14px 16px;
+        font-size: 0.95rem;
+        border-radius: 10px;
+      }
+      @keyframes sheetSlideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
 
       /* Search history chip remove — always visible on mobile (no hover) */
       .search-history-chip .sh-remove { opacity: 0.7; }
@@ -2257,6 +2287,13 @@
           <button class="ctrl-btn" id="librarySyncBtn" title="Sync library across devices" style="opacity:1;color:var(--text-sub);font-size:0.78rem;width:auto;padding:0 12px;border-radius:16px;border:1px solid var(--text-sub)">Sync</button>
         </div>
         <div id="favoritesList" class="song-list"></div>
+        <div id="onRepeatSection" class="hidden" style="margin-top:32px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;">
+            <h3 style="margin:0;font-size:1.25rem;">On Repeat</h3>
+            <span style="font-size:0.78rem;color:var(--text-sub);">Your most-played</span>
+          </div>
+          <div id="onRepeatGrid" class="card-grid"></div>
+        </div>
         <div id="libraryPlaylistsSection" style="margin-top:32px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;">
             <h3 style="margin:0;font-size:1.25rem;">Your Playlists</h3>
@@ -3538,7 +3575,38 @@
       // More menu
       row.querySelector('[data-act="more"]').onclick = (e) => { e.stopPropagation(); showContextMenu(e, song, queue); };
 
+      // Long-press → context menu (mobile)
+      attachLongPress(row, (clientX, clientY) => {
+        showContextMenu({ clientX, clientY, preventDefault() {} }, song, queue);
+      });
+
       return row;
+    }
+
+    // ── LONG-PRESS HELPER ── (mobile gesture for context menu)
+    function attachLongPress(el, handler, ms = 480) {
+      let timer = null, startX = 0, startY = 0, fired = false;
+      const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
+      el.addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        startX = t.clientX; startY = t.clientY; fired = false;
+        timer = setTimeout(() => {
+          fired = true;
+          haptic();
+          handler(startX, startY);
+        }, ms);
+      }, { passive: true });
+      el.addEventListener("touchmove", (e) => {
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) cancel();
+      }, { passive: true });
+      el.addEventListener("touchend", () => { cancel(); }, { passive: true });
+      el.addEventListener("touchcancel", cancel, { passive: true });
+      // Capture-phase click suppressor: if long-press fired, swallow the synthetic click
+      el.addEventListener("click", (e) => {
+        if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; }
+      }, true);
     }
 
     function showSongListSkeleton(target, count = 6) {
@@ -3821,8 +3889,9 @@
       // Extract color for dynamic bg
       extractColor(song.image);
 
-      // Track recently played
+      // Track recently played + bump play count for "On Repeat"
       addToRecentlyPlayed(song);
+      incrementPlayCount(song);
 
       // Fetch lyrics
       fetchLyrics(song);
@@ -3853,15 +3922,60 @@
       if (npo) npo.classList.toggle("is-playing", !!playing);
     }
 
-    function skipNext(force = false) {
+    async function skipNext(force = false) {
       if (!state.currentQueue.length) return;
       if (!force && state.repeatMode === "one") { audio.currentTime = 0; audio.play(); return; }
       let next = state.currentIndex + 1;
       if (next >= state.currentQueue.length) {
-        if (state.repeatMode === "all" || force) next = 0;
-        else { audio.pause(); updatePlayBtn(false); return; }
+        if (state.repeatMode === "all" || force) {
+          next = 0;
+        } else if (state.autoQueueEnabled !== false) {
+          // Try to extend queue with suggestions before giving up
+          const cur = currentSong();
+          if (cur && cur.id) {
+            const added = await appendSuggestionsToQueue(cur);
+            if (added > 0) {
+              next = state.currentIndex + 1;
+            } else {
+              audio.pause(); updatePlayBtn(false); return;
+            }
+          } else {
+            audio.pause(); updatePlayBtn(false); return;
+          }
+        } else {
+          audio.pause(); updatePlayBtn(false); return;
+        }
       }
       playSongAt(next, state.currentQueue);
+    }
+
+    // Fetch & append JioSaavn-suggested songs to current queue. De-duplicates against ids
+    // already present and existing favorites/recently-played to keep the stream fresh.
+    let _suggestInflight = null;
+    async function appendSuggestionsToQueue(seed) {
+      if (_suggestInflight) return _suggestInflight;
+      _suggestInflight = (async () => {
+        try {
+          const r = await apiFetch(`/songs/${encodeURIComponent(seed.id)}/suggestions`);
+          const raw = Array.isArray(r?.data) ? r.data : [];
+          if (!raw.length) return 0;
+          const seen = new Set(state.currentQueue.map(s => s.id));
+          const fresh = [];
+          for (const item of raw) {
+            const n = normalizeSong(item);
+            if (!n.id || !n.src || seen.has(n.id)) continue;
+            seen.add(n.id);
+            fresh.push(enrichSong(n));
+            if (fresh.length >= 15) break;
+          }
+          if (!fresh.length) return 0;
+          state.currentQueue.push(...fresh);
+          if (state.currentPage === "queue") renderQueueWithDrag();
+          return fresh.length;
+        } catch { return 0; }
+        finally { _suggestInflight = null; }
+      })();
+      return _suggestInflight;
     }
 
     function skipPrev() {
@@ -4666,7 +4780,30 @@
       const songs = state.favorites.map(f => enrichSong(f.song));
       dom.favCount.textContent = `${songs.length} song${songs.length === 1 ? "" : "s"}`;
       renderSongList(dom.favoritesList, songs, songs);
+      renderOnRepeat();
       renderLibraryPlaylists();
+    }
+
+    function renderOnRepeat() {
+      const section = $("onRepeatSection");
+      const grid = $("onRepeatGrid");
+      if (!section || !grid) return;
+      const top = getTopPlayed(8).map(s => enrichSong(s));
+      if (!top.length) { section.classList.add("hidden"); return; }
+      section.classList.remove("hidden");
+      grid.innerHTML = "";
+      top.forEach(song => {
+        const cardItem = {
+          type: "song",
+          id: song.id,
+          title: song.title,
+          image: song.image,
+          artist: song.artist,
+          _songRef: song,
+          _queueRef: top
+        };
+        grid.appendChild(renderHomeCard(cardItem));
+      });
     }
 
     function renderLibraryPlaylists() {
@@ -4951,13 +5088,17 @@
       const verb = item.type === "artist" ? "Open artist"
                  : item.type === "genre" ? "Browse genre"
                  : item.type === "album" ? "Play album"
+                 : item.type === "song" ? "Play song"
                  : "Play playlist";
       card.setAttribute("aria-label", `${verb} ${item.title}`);
       card._itemId = item.id;
       const showOverlay = item.type !== "artist" && item.type !== "genre";
       const sub = item.subtitle
         || (item.songCount ? item.songCount + " songs"
-            : (item.type === "album" ? "Album" : (item.type === "artist" ? "Artist" : "Playlist")));
+            : (item.type === "album" ? "Album"
+              : item.type === "artist" ? "Artist"
+              : item.type === "song" ? (item.artist || "Song")
+              : "Playlist"));
       card.innerHTML = `
         <div class="card-art">
           ${item.image ? `<img src="${item.image}" alt="${item.title}" loading="lazy">` : ""}
@@ -4975,6 +5116,10 @@
           dom.searchClear.classList.remove("hidden");
           switchPage("search");
           doSearch(q);
+        }
+        else if (item.type === "song" && item._songRef) {
+          const queue = item._queueRef && item._queueRef.length ? item._queueRef : [item._songRef];
+          playSong(item._songRef, queue);
         }
         else fetchAndPlayPlaylist(item.id);
       };
@@ -5250,6 +5395,69 @@
       const alreadyDead = new Set(getDeadAlbums());
       const unchecked = albumItems.filter(a => !alreadyDead.has(a.id));
       if (unchecked.length) validateAlbumsInBackground(unchecked);
+
+      // Background: insert "More Like X" personalized row using last-played seed.
+      loadMoreLikeThis().catch(() => {});
+    }
+
+    // Personalized row driven by /songs/{id}/suggestions on the most recently played track.
+    // Renders as song cards that play directly into a queue of all suggestions.
+    async function loadMoreLikeThis() {
+      const recent = getRecentlyPlayed();
+      const seed = recent.find(s => s && s.id);
+      if (!seed) return;
+      let raw;
+      try {
+        const r = await apiFetch(`/songs/${encodeURIComponent(seed.id)}/suggestions`);
+        raw = Array.isArray(r?.data) ? r.data : [];
+      } catch { return; }
+      if (!raw.length) return;
+
+      const seen = new Set([seed.id]);
+      const songs = [];
+      for (const item of raw) {
+        const n = normalizeSong(item);
+        if (!n.id || !n.src || seen.has(n.id)) continue;
+        seen.add(n.id);
+        songs.push(enrichSong(n));
+        if (songs.length >= 12) break;
+      }
+      if (!songs.length) return;
+
+      const container = $("homeSections");
+      if (!container) return;
+      // If a previous "More Like" section exists, replace it.
+      const existing = container.querySelector('[data-section-key="more-like"]');
+      if (existing) existing.remove();
+
+      const sectionEl = document.createElement("div");
+      sectionEl.className = "home-section";
+      sectionEl.dataset.sectionKey = "more-like";
+      sectionEl.style.marginBottom = "36px";
+      const seedTitle = (seed.title || "").length > 24 ? seed.title.slice(0, 24) + "…" : (seed.title || "your last play");
+      sectionEl.innerHTML = `<div class="section-header"><h3>More like ${seedTitle}</h3></div>`;
+      const grid = document.createElement("div");
+      grid.className = "card-grid";
+      songs.forEach(song => {
+        const cardItem = {
+          type: "song",
+          id: song.id,
+          title: song.title,
+          image: song.image,
+          artist: song.artist,
+          _songRef: song,
+          _queueRef: songs
+        };
+        grid.appendChild(renderHomeCard(cardItem));
+      });
+      sectionEl.appendChild(grid);
+      // Insert near the top, after the first section so personalized row is above the fold.
+      const firstSection = container.firstElementChild;
+      if (firstSection && firstSection.nextSibling) {
+        container.insertBefore(sectionEl, firstSection.nextSibling);
+      } else {
+        container.appendChild(sectionEl);
+      }
     }
 
     async function validateAlbumsInBackground(albums) {
@@ -5296,6 +5504,61 @@
 
     dom.retryBtn.onclick = () => loadInitial(true);
     dom.topbarRefresh.onclick = () => { localStorage.removeItem(CACHE_KEY); loadInitial(true); };
+
+    // ── PULL-TO-REFRESH ── (mobile, home page only)
+    (function initPullToRefresh() {
+      const sc = dom.mainContent;
+      if (!sc) return;
+      let startY = 0, dy = 0, pulling = false, refreshing = false;
+      const indicator = document.createElement("div");
+      indicator.id = "ptrIndicator";
+      indicator.style.cssText = "position:fixed;left:50%;top:0;transform:translate(-50%,-100%);width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);box-shadow:0 4px 16px rgba(0,0,0,0.4);display:grid;place-items:center;color:var(--accent);z-index:9998;transition:transform 0.2s,opacity 0.2s;opacity:0;pointer-events:none;";
+      indicator.innerHTML = `<svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-refresh"/></svg>`;
+      document.body.appendChild(indicator);
+
+      sc.addEventListener("touchstart", (e) => {
+        if (refreshing) return;
+        if (state.currentPage !== "home") return;
+        if (sc.scrollTop > 0) return;
+        startY = e.touches[0].clientY;
+        pulling = true;
+      }, { passive: true });
+
+      sc.addEventListener("touchmove", (e) => {
+        if (!pulling) return;
+        dy = e.touches[0].clientY - startY;
+        if (dy <= 0) { indicator.style.transform = "translate(-50%,-100%)"; indicator.style.opacity = "0"; return; }
+        const pull = Math.min(dy * 0.5, 100);
+        const progress = Math.min(pull / 60, 1);
+        indicator.style.transform = `translate(-50%, ${pull - 50}px) rotate(${progress * 360}deg)`;
+        indicator.style.opacity = String(progress);
+      }, { passive: true });
+
+      sc.addEventListener("touchend", () => {
+        if (!pulling) return;
+        pulling = false;
+        if (dy > 120) {
+          refreshing = true;
+          haptic();
+          indicator.style.transform = "translate(-50%, 60px)";
+          indicator.style.opacity = "1";
+          indicator.querySelector("svg").style.animation = "spin 0.8s linear infinite";
+          localStorage.removeItem(CACHE_KEY);
+          loadInitial(true).finally(() => {
+            setTimeout(() => {
+              indicator.style.transform = "translate(-50%, -100%)";
+              indicator.style.opacity = "0";
+              indicator.querySelector("svg").style.animation = "";
+              refreshing = false;
+            }, 400);
+          });
+        } else {
+          indicator.style.transform = "translate(-50%, -100%)";
+          indicator.style.opacity = "0";
+        }
+        dy = 0;
+      }, { passive: true });
+    })();
 
     // ── CROSSFADE ──
     state.crossfade = true;
@@ -5374,6 +5637,30 @@
       if (recent.length > 20) recent = recent.slice(0, 20);
       localStorage.setItem(userKey("recent"), JSON.stringify(recent));
       renderRecentlyPlayed();
+    }
+
+    // ── PLAY COUNTS / ON REPEAT ──
+    // Per-song play count keyed by song id; song meta stored alongside so the "On Repeat"
+    // row can render without a separate lookup.
+    function getPlayCounts() { return safeParse(localStorage.getItem(userKey("playCounts")), {}); }
+    function incrementPlayCount(song) {
+      if (!song?.id) return;
+      const counts = getPlayCounts();
+      const existing = counts[song.id] || { count: 0 };
+      counts[song.id] = {
+        count: (existing.count || 0) + 1,
+        last: Date.now(),
+        meta: { id: song.id, title: song.title, artist: song.artist, image: song.image, src: song.src, duration: song.duration, album: song.album }
+      };
+      localStorage.setItem(userKey("playCounts"), JSON.stringify(counts));
+    }
+    function getTopPlayed(limit = 8) {
+      const counts = getPlayCounts();
+      return Object.values(counts)
+        .filter(e => e && e.meta && e.count >= 2)
+        .sort((a, b) => (b.count - a.count) || ((b.last || 0) - (a.last || 0)))
+        .slice(0, limit)
+        .map(e => e.meta);
     }
     function renderRecentlyPlayed() {
       const recent = getRecentlyPlayed();
@@ -5558,15 +5845,29 @@
       if (currentSong()) openNowPlaying();
     });
 
-    // Swipe-up on mini-player to expand NP overlay
+    // Swipe-up on mini-player to expand NP overlay; horizontal swipe to skip prev/next
     (function initPlayerSwipe() {
       const bar = $("playerBar");
-      let startY = 0, startX = 0;
-      bar.addEventListener("touchstart", (e) => { startY = e.touches[0].clientY; startX = e.touches[0].clientX; }, { passive: true });
+      let startY = 0, startX = 0, startedOnControl = false;
+      bar.addEventListener("touchstart", (e) => {
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        // Don't hijack swipes that begin on a button (play/pause, next, etc.)
+        startedOnControl = !!e.target.closest("button, .progress-track, .volume-track");
+      }, { passive: true });
       bar.addEventListener("touchend", (e) => {
+        if (startedOnControl) return;
         const dy = e.changedTouches[0].clientY - startY;
-        const dx = Math.abs(e.changedTouches[0].clientX - startX);
-        if (dy < -40 && dx < 80 && currentSong()) { haptic(); openNowPlaying(); }
+        const dx = e.changedTouches[0].clientX - startX;
+        const adx = Math.abs(dx), ady = Math.abs(dy);
+        if (!currentSong()) return;
+        // Vertical swipe up → open now-playing
+        if (dy < -40 && adx < 80) { haptic(); openNowPlaying(); return; }
+        // Horizontal swipe → skip
+        if (adx > 60 && ady < 40) {
+          haptic();
+          if (dx < 0) skipNext(true); else skipPrev();
+        }
       }, { passive: true });
     })();
 
