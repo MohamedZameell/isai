@@ -803,6 +803,12 @@
       overflow: hidden;
     }
 
+    /* Circular artist card variant — same grid cell, round image, no play overlay */
+    .card.card-artist .card-art { border-radius: 50%; }
+    .card.card-artist .card-play { display: none; }
+    .card.card-artist .card-title,
+    .card.card-artist .card-sub { text-align: center; }
+
     /* ── EMPTY STATE ── */
     .empty-state {
       text-align: center;
@@ -2003,6 +2009,7 @@
     <symbol id="ico-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.74 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
     <symbol id="ico-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></symbol>
     <symbol id="ico-drag" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></symbol>
+    <symbol id="ico-check" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm-1.59 14.59L5.83 12l1.41-1.41 3.17 3.17 6.34-6.34 1.41 1.41z"/></symbol>
   </svg>
 
   <div class="app">
@@ -3069,6 +3076,59 @@
         };
       } catch {
         toast("Failed to load album");
+      }
+    }
+
+
+    async function fetchAndShowArtist(artistId, fallbackName, fallbackImage) {
+      try {
+        switchPage("playlistView");
+        dom.playlistViewHeader.innerHTML = `<div class="skeleton" style="height:80px;width:100%;border-radius:8px"></div>`;
+        showSongListSkeleton(dom.playlistViewSongs, 8);
+
+        // Run artist info + songs in parallel — songs is the heavier call
+        const [infoRes, songsRes] = await Promise.all([
+          apiFetch(`/artists/${encodeURIComponent(artistId)}`).catch(() => null),
+          apiFetch(`/artists/${encodeURIComponent(artistId)}/songs?sortBy=popularity&sortOrder=desc&page=0`).catch(() => null)
+        ]);
+
+        const info = infoRes?.data || {};
+        const name = decode(info.name || fallbackName || "Artist");
+        const imgs = Array.isArray(info.image) ? info.image : [];
+        const cover = (imgs.length ? imgs[imgs.length - 1]?.url : "") || fallbackImage || "";
+        const followers = info.followerCount ? `${Number(info.followerCount).toLocaleString()} followers` : "";
+        const verified = info.isVerified ? `<span title="Verified" style="display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-size:0.75rem;margin-left:6px;vertical-align:middle"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-check"/></svg></span>` : "";
+
+        const rawSongs = (songsRes?.data?.songs || songsRes?.data?.results || []).map(normalizeSong);
+        const enriched = (await enrichMissingSrc(rawSongs)).map(enrichSong);
+
+        if (!enriched.length) { toast("No songs available for this artist"); return; }
+        state.songs = enriched;
+
+        dom.playlistViewHeader.innerHTML = `
+          <div style="display:flex;align-items:center;gap:24px;">
+            <div style="width:96px;height:96px;border-radius:50%;background:var(--bg-elevated);overflow:hidden;flex-shrink:0;">
+              ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+            </div>
+            <div>
+              <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Artist</p>
+              <h2>${name}${verified}</h2>
+              <p style="color:var(--text-sub);font-size:0.85rem">${followers || "Top songs"}</p>
+            </div>
+          </div>
+          <div class="pl-header-controls">
+            <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
+            <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+          </div>
+        `;
+        renderSongList(dom.playlistViewSongs, enriched, enriched);
+        $("plViewPlay").onclick = () => playSongAt(0, enriched);
+        $("plViewShuffle").onclick = () => {
+          if (!state.shuffleOn) { state.shuffleOn = true; updateShuffleUI(); persistSettings({ shuffle_enabled: true }); }
+          playSongAt(Math.floor(Math.random() * enriched.length), enriched);
+        };
+      } catch {
+        toast("Failed to load artist");
       }
     }
 
@@ -4376,23 +4436,25 @@
 
     function renderHomeCard(item) {
       const card = document.createElement("div");
-      card.className = "card";
+      card.className = item.type === "artist" ? "card card-artist" : "card";
       card.setAttribute("role", "button");
       card.tabIndex = 0;
-      card.setAttribute("aria-label", `Play ${item.type === "album" ? "album" : "playlist"} ${item.title}`);
+      const verb = item.type === "artist" ? "Open artist" : (item.type === "album" ? "Play album" : "Play playlist");
+      card.setAttribute("aria-label", `${verb} ${item.title}`);
       card._itemId = item.id;
       const sub = item.subtitle
-        || (item.songCount ? item.songCount + " songs" : (item.type === "album" ? "Album" : "Playlist"));
+        || (item.songCount ? item.songCount + " songs" : (item.type === "album" ? "Album" : (item.type === "artist" ? "Artist" : "Playlist")));
       card.innerHTML = `
         <div class="card-art">
           ${item.image ? `<img src="${item.image}" alt="${item.title}" loading="lazy">` : ""}
-          <div class="card-play"><svg><use href="#ico-play"/></svg></div>
+          ${item.type === "artist" ? "" : `<div class="card-play"><svg><use href="#ico-play"/></svg></div>`}
         </div>
         <div class="card-title">${item.title}</div>
         <div class="card-sub">${sub}</div>
       `;
       card.onclick = () => {
         if (item.type === "album") fetchAndPlayAlbum(item.id);
+        else if (item.type === "artist") fetchAndShowArtist(item.id, item.title, item.image);
         else fetchAndPlayPlaylist(item.id);
       };
       return card;
@@ -4513,6 +4575,19 @@
       };
     }
 
+    function normalizeModuleArtist(a) {
+      // artistMap.artists[] entries shape: { id, name, role, image, type, perma_url }
+      const role = (a.role || "").toLowerCase();
+      const sub = role === "singer" ? "Artist" : (role ? role[0].toUpperCase() + role.slice(1) : "Artist");
+      return {
+        id: a.id,
+        type: "artist",
+        title: decode(a.name || ""),
+        image: bumpImageQuality(typeof a.image === "string" ? a.image : (Array.isArray(a.image) ? a.image[a.image.length - 1]?.url : "")),
+        subtitle: sub
+      };
+    }
+
     async function fetchHomeModules() {
       // The proxy reads ?language= and forwards it as a Cookie header to jiosaavn.com,
       // which biases the homepage modules toward those languages.
@@ -4531,6 +4606,23 @@
       const newAlbums = (data.new_albums || []).map(normalizeModuleAlbum).filter(a => a.id && a.image && !dead.has(a.id));
       const playlists = (data.featured_playlists || []).map(normalizeModulePlaylist).filter(p => p.id && p.image);
       const charts = (data.charts || []).map(normalizeModulePlaylist).filter(c => c.id && c.image);
+
+      // Featured artists: dedupe across new_albums[].more_info.artistMap.artists[].
+      // /modules has no top-level featured_artists field, so we synthesize a row from the
+      // artists credited on the homepage's new releases.
+      const artistById = new Map();
+      for (const raw of (data.new_albums || [])) {
+        const credited = raw?.more_info?.artistMap?.artists || [];
+        for (const a of credited) {
+          if (!a?.id || !a?.name || !a?.image) continue;
+          const role = (a.role || "").toLowerCase();
+          // Skip non-performers — lyricists, music directors etc make poor "Featured Artists" tiles
+          if (role && role !== "singer" && role !== "primary_artist") continue;
+          if (artistById.has(a.id)) continue;
+          artistById.set(a.id, normalizeModuleArtist(a));
+        }
+      }
+      const featuredArtists = Array.from(artistById.values()).filter(a => a.image).slice(0, 12);
 
       const userLangs = state.userLangs.length ? state.userLangs : ["english", "hindi"];
 
@@ -4565,6 +4657,11 @@
             items: chartsForLang.slice(0, 12)
           });
         }
+      }
+
+      // Featured Artists — circular row, sits between language sections and editorial picks.
+      if (featuredArtists.length >= 4) {
+        sections.push({ title: "Featured Artists", items: featuredArtists });
       }
 
       // JioSaavn editorial picks — featured playlists, mixed languages.
