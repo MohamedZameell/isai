@@ -4305,6 +4305,81 @@
       return card;
     }
 
+    // JioSaavn deep-link detection. Recognized URL shapes:
+    //   /song/<slug>/<token>      → play the song
+    //   /album/<slug>/<token>     → open album view
+    //   /artist/<slug>/<token>    → open artist page
+    //   /featured/<slug>/<token>  → open playlist (editorial)
+    //   /s/playlist/<u>/<slug>/<token> → open user playlist
+    function _parseJioSaavnLink(text) {
+      const t = (text || "").trim();
+      const m = t.match(/^https?:\/\/(?:www\.)?jiosaavn\.com\/([^?#\s]+)/i);
+      if (!m) return null;
+      const path = m[1].toLowerCase();
+      let kind = null;
+      if (path.startsWith("song/")) kind = "song";
+      else if (path.startsWith("album/")) kind = "album";
+      else if (path.startsWith("artist/")) kind = "artist";
+      else if (path.startsWith("featured/") || path.startsWith("s/playlist/")) kind = "playlist";
+      else return null;
+      // Use the original-cased URL for the API call to preserve token capitalization
+      return { kind, url: t.split(/[?#]/)[0] };
+    }
+
+    async function tryResolveJioSaavnLink(text) {
+      const parsed = _parseJioSaavnLink(text);
+      if (!parsed) return false;
+      const { kind, url } = parsed;
+      const enc = encodeURIComponent(url);
+      try {
+        if (kind === "song") {
+          toast("Opening song…");
+          const r = await apiFetch(`/songs?link=${enc}`);
+          const raw = Array.isArray(r?.data) ? r.data[0] : r?.data;
+          if (!raw) { toast("Couldn't open that link"); return true; }
+          const song = enrichSong(normalizeSong(raw));
+          dom.searchInput.value = "";
+          dom.searchClear.classList.add("hidden");
+          playSong(song, [song]);
+          return true;
+        }
+        if (kind === "album") {
+          toast("Opening album…");
+          const r = await apiFetch(`/albums?link=${enc}`);
+          const id = r?.data?.id;
+          dom.searchInput.value = "";
+          dom.searchClear.classList.add("hidden");
+          if (id) fetchAndPlayAlbum(id); else toast("Couldn't open that album");
+          return true;
+        }
+        if (kind === "playlist") {
+          toast("Opening playlist…");
+          const r = await apiFetch(`/playlists?link=${enc}`);
+          const id = r?.data?.id;
+          dom.searchInput.value = "";
+          dom.searchClear.classList.add("hidden");
+          if (id) fetchAndPlayPlaylist(id); else toast("Couldn't open that playlist");
+          return true;
+        }
+        if (kind === "artist") {
+          toast("Opening artist…");
+          // No /artists?link= — pull the slug-token from the URL and use the songs endpoint
+          // Pattern: /artist/<slug>/<token>. The token is what /artists/:id accepts.
+          const segs = url.replace(/^https?:\/\/(?:www\.)?jiosaavn\.com\//i, "").split("/");
+          const token = segs[2] ? segs[2].split(/[?#]/)[0] : null;
+          if (!token) { toast("Couldn't open that artist"); return true; }
+          dom.searchInput.value = "";
+          dom.searchClear.classList.add("hidden");
+          fetchAndShowArtist(token);
+          return true;
+        }
+      } catch {
+        toast("Couldn't open that link");
+        return true;
+      }
+      return false;
+    }
+
     let doSearch = debounce(async (query) => {
       if (!query.trim()) {
         dom.searchResults.innerHTML = "";
@@ -4313,6 +4388,8 @@
         renderBrowseCategories();
         return;
       }
+      // Deep-link short-circuit: if the query is a JioSaavn URL, resolve it directly.
+      if (await tryResolveJioSaavnLink(query)) return;
       $("searchHistoryWrap").classList.add("hidden");
       $("searchEmpty").classList.add("hidden");
       ensureLocation(); // safe to call repeatedly; only prompts once
@@ -4371,6 +4448,17 @@
       if (!v) renderSearchHistory();
       doSearch(v);
     };
+
+    // Intercept JioSaavn URL paste immediately — bypasses the 400ms debounce
+    // so the resolve happens the moment the user pastes.
+    dom.searchInput.addEventListener("paste", async (e) => {
+      const text = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+      if (!_parseJioSaavnLink(text)) return;
+      e.preventDefault();
+      dom.searchInput.value = text.trim();
+      dom.searchClear.classList.remove("hidden");
+      await tryResolveJioSaavnLink(text);
+    });
 
     dom.searchInput.onfocus = () => {
       if (dom.searchInput.value) switchPage("search");
