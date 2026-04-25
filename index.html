@@ -3245,12 +3245,12 @@
         dom.playlistViewHeader.innerHTML = `
           <div style="display:flex;align-items:center;gap:24px;">
             <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
-              ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+              ${cover ? `<img src="${escapeAttr(cover)}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
             </div>
             <div>
               <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Album</p>
-              <h2>${name}</h2>
-              <p style="color:var(--text-sub);font-size:0.85rem">${sub} \u2022 ${songs.length} songs</p>
+              <h2>${escapeHtml(name)}</h2>
+              <p style="color:var(--text-sub);font-size:0.85rem">${escapeHtml(sub)}\u2022 ${songs.length} songs</p>
             </div>
           </div>
           <div class="pl-header-controls">
@@ -3301,12 +3301,12 @@
       dom.playlistViewHeader.innerHTML = `
         <div style="display:flex;align-items:center;gap:24px;">
           <div style="width:96px;height:96px;border-radius:50%;background:var(--bg-elevated);overflow:hidden;flex-shrink:0;">
-            ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+            ${cover ? `<img src="${escapeAttr(cover)}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
           </div>
           <div>
             <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Artist</p>
-            <h2>${name}${verified}</h2>
-            <p style="color:var(--text-sub);font-size:0.85rem">${followers || "Top songs"}</p>
+            <h2>${escapeHtml(name)}${verified}</h2>
+            <p style="color:var(--text-sub);font-size:0.85rem">${escapeHtml(followers || "Top songs")}</p>
           </div>
         </div>
         <div class="pl-header-controls">
@@ -5124,11 +5124,11 @@
           dom.playlistViewHeader.innerHTML = `
             <div style="display:flex;align-items:center;gap:24px;">
               <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
-                ${cover ? `<img src="${cover}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
+                ${cover ? `<img src="${escapeAttr(cover)}" style="width:100%;height:100%;object-fit:cover" alt="">` : ""}
               </div>
               <div>
                 <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Playlist</p>
-                <h2>${plName}</h2>
+                <h2>${escapeHtml(plName)}</h2>
                 <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs</p>
               </div>
             </div>
