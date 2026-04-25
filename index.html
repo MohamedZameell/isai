@@ -2101,7 +2101,7 @@
         <h1>Cove</h1>
       </div>
 
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" aria-label="Main">
         <button class="sidebar-nav-item active" data-page="home">
           <svg><use href="#ico-home"/></svg><span>Home</span>
         </button>
@@ -2157,7 +2157,7 @@
         </div>
         <div class="search-box">
           <svg class="search-icon" style="width:16px;height:16px;fill:currentColor"><use href="#ico-search"/></svg>
-          <input id="searchInput" type="search" placeholder="What do you want to listen to?" autocomplete="off" spellcheck="false">
+          <input id="searchInput" type="search" placeholder="What do you want to listen to?" autocomplete="off" spellcheck="false" aria-label="Search for songs, albums, artists, or playlists">
           <button class="search-clear hidden" id="searchClear" aria-label="Clear search"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-close"/></svg></button>
         </div>
         <div class="topbar-actions">
@@ -2329,7 +2329,7 @@
         </div>
         <div class="progress-bar">
           <span class="time left" id="currentTime">0:00</span>
-          <div class="progress-track" id="progressTrack">
+          <div class="progress-track" id="progressTrack" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0 seconds">
             <div class="progress-fill" id="progressFill" style="width:0%">
               <div class="progress-thumb"></div>
             </div>
@@ -2340,7 +2340,7 @@
 
       <div class="player-right">
         <button class="vol-btn" id="volBtn" aria-label="Toggle mute"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-vol"/></svg></button>
-        <div class="volume-track" id="volumeTrack">
+        <div class="volume-track" id="volumeTrack" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="100 percent">
           <div class="volume-fill" id="volumeFill" style="width:100%"></div>
         </div>
       </div>
@@ -2348,7 +2348,7 @@
   </div>
 
   <!-- MOBILE NAV -->
-  <nav class="mobile-nav">
+  <nav class="mobile-nav" aria-label="Mobile">
     <div class="mobile-nav-inner">
       <button class="mobile-nav-btn active" data-page="home" aria-label="Home">
         <svg><use href="#ico-home"/></svg>Home
@@ -2363,9 +2363,9 @@
   </nav>
 
   <!-- AUTH MODAL -->
-  <div class="modal-overlay hidden" id="authModal">
+  <div class="modal-overlay hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
     <div class="modal">
-      <h3>Sign in to Cove</h3>
+      <h3 id="authModalTitle">Sign in to Cove</h3>
       <p>Enter your credentials to access your music library.</p>
       <div class="modal-field">
         <label class="modal-label" for="emailInput">Email</label>
@@ -2384,7 +2384,7 @@
   </div>
 
   <!-- PLAYLIST CREATE MODAL -->
-  <div class="modal-overlay hidden" id="playlistModal">
+  <div class="modal-overlay hidden" id="playlistModal" role="dialog" aria-modal="true" aria-labelledby="plModalTitle">
     <div class="modal">
       <h3 id="plModalTitle">Create Playlist</h3>
       <div class="modal-field">
@@ -2460,7 +2460,8 @@
   </div>
 
   <!-- TOAST -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="liveAnnouncer" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"></div>
 
   <audio id="audio" preload="metadata"></audio>
   <audio id="audio2" preload="metadata"></audio>
@@ -3771,7 +3772,7 @@
         dom.emailInput.value = "";
         $("passwordInput").value = "";
         dom.authMessage.textContent = "";
-        dom.authModal.classList.remove("hidden");
+        openModal(dom.authModal, dom.emailInput);
         return;
       }
       const prevSrc = audio.dataset.blobUrl || "";
@@ -3809,6 +3810,10 @@
       updatePlayBtn(true);
       updateNowFav();
       refreshActiveSongRows();
+
+      // Announce to assistive tech
+      const announcer = $("liveAnnouncer");
+      if (announcer) announcer.textContent = `Now playing ${song.title} by ${song.artist}`;
 
       // Update now-playing overlay
       updateNowPlayingOverlay(song);
@@ -3893,10 +3898,11 @@
 
     function updateShuffleUI() {
       dom.shuffleBtn.classList.toggle("is-active", state.shuffleOn);
+      dom.shuffleBtn.setAttribute("aria-pressed", String(state.shuffleOn));
       const np = $("npShuffle");
-      if (np) np.classList.toggle("is-active", state.shuffleOn);
+      if (np) { np.classList.toggle("is-active", state.shuffleOn); np.setAttribute("aria-pressed", String(state.shuffleOn)); }
       const fav = $("favShuffleToggle");
-      if (fav) fav.classList.toggle("is-active", state.shuffleOn);
+      if (fav) { fav.classList.toggle("is-active", state.shuffleOn); fav.setAttribute("aria-pressed", String(state.shuffleOn)); }
     }
 
     function toggleShuffle() {
@@ -3924,6 +3930,11 @@
       state.repeatMode = state.repeatMode === "off" ? "all" : state.repeatMode === "all" ? "one" : "off";
       dom.repeatBtn.classList.toggle("is-active", state.repeatMode !== "off");
       dom.repeatBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${state.repeatMode === "one" ? "#ico-repeat-one" : "#ico-repeat"}"/></svg>`;
+      // a11y: repeat is tri-state, so use aria-label rather than aria-pressed
+      const repeatLabel = `Repeat ${state.repeatMode === "off" ? "off" : state.repeatMode === "all" ? "all" : "one"}`;
+      dom.repeatBtn.setAttribute("aria-label", repeatLabel);
+      const npRepeat = $("npRepeat");
+      if (npRepeat) npRepeat.setAttribute("aria-label", repeatLabel);
       toast(`Repeat: ${state.repeatMode}`);
       persistSettings({ repeat_mode: state.repeatMode });
     }
@@ -3938,6 +3949,9 @@
       // Now playing overlay
       $("npFill").style.width = pct + "%";
       $("npCurrent").textContent = fmt(audio.currentTime);
+      // a11y: keep slider state in sync
+      dom.progressTrack.setAttribute("aria-valuenow", String(Math.round(pct)));
+      dom.progressTrack.setAttribute("aria-valuetext", `${fmt(audio.currentTime)} of ${fmt(audio.duration)}`);
       // MediaSession position state — skipped to prevent iOS showing seek ±10s buttons
       // Synced lyrics highlight
       if (state.syncedLyrics && state.syncedLyrics.length) highlightSyncedLyric(audio.currentTime);
@@ -3963,6 +3977,12 @@
       if (audio.duration) audio.currentTime = audio.duration * ratio;
     };
 
+    function syncVolumeA11y() {
+      const pct = Math.round((audio.volume || 0) * 100);
+      dom.volumeTrack.setAttribute("aria-valuenow", String(pct));
+      dom.volumeTrack.setAttribute("aria-valuetext", `${pct} percent`);
+    }
+
     // Volume
     dom.volumeTrack.onclick = (e) => {
       const rect = dom.volumeTrack.getBoundingClientRect();
@@ -3970,13 +3990,46 @@
       audio.volume = state.volume;
       dom.volumeFill.style.width = (state.volume * 100) + "%";
       dom.volBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${state.volume === 0 ? "#ico-vol-mute" : "#ico-vol"}"/></svg>`;
+      syncVolumeA11y();
     };
 
     dom.volBtn.onclick = () => {
       if (audio.volume > 0) { state.volume = audio.volume; audio.volume = 0; dom.volumeFill.style.width = "0%"; }
       else { audio.volume = state.volume || 1; dom.volumeFill.style.width = (audio.volume * 100) + "%"; }
       dom.volBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${audio.volume === 0 ? "#ico-vol-mute" : "#ico-vol"}"/></svg>`;
+      dom.volBtn.setAttribute("aria-pressed", String(audio.volume === 0));
+      syncVolumeA11y();
     };
+
+    // Keyboard control on slider tracks (Left/Right/Home/End)
+    dom.progressTrack.addEventListener("keydown", (e) => {
+      if (!audio.duration) return;
+      const step = e.shiftKey ? 10 : 5; // seconds
+      let next = audio.currentTime;
+      if (e.key === "ArrowRight" || e.key === "ArrowUp") next = Math.min(audio.duration, next + step);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = Math.max(0, next - step);
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = audio.duration - 0.1;
+      else return;
+      e.preventDefault();
+      audio.currentTime = next;
+    });
+
+    dom.volumeTrack.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 0.1 : 0.05;
+      let next = audio.volume;
+      if (e.key === "ArrowRight" || e.key === "ArrowUp") next = Math.min(1, next + step);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowDown") next = Math.max(0, next - step);
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = 1;
+      else return;
+      e.preventDefault();
+      state.volume = next;
+      audio.volume = next;
+      dom.volumeFill.style.width = (next * 100) + "%";
+      dom.volBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${next === 0 ? "#ico-vol-mute" : "#ico-vol"}"/></svg>`;
+      syncVolumeA11y();
+    });
 
     // Controls
     dom.playPauseBtn.onclick = () => { haptic(); if (audio.src) { audio.paused ? audio.play() : audio.pause(); } else if (state.songs.length) playSongAt(0, state.songs); };
@@ -4032,6 +4085,10 @@
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
       if (e.target.tagName === "INPUT") return;
+      // Slider tracks own their arrow keys
+      if (e.target === dom.progressTrack || e.target === dom.volumeTrack) {
+        if (e.key.startsWith("Arrow") || e.key === "Home" || e.key === "End") return;
+      }
       if (e.code === "Space") { e.preventDefault(); dom.playPauseBtn.click(); }
       if (e.code === "ArrowRight" && e.shiftKey) skipNext(true);
       if (e.code === "ArrowLeft" && e.shiftKey) skipPrev();
@@ -4042,6 +4099,7 @@
       const song = currentSong();
       const active = song && isFav(song.id);
       dom.nowFavBtn.classList.toggle("is-active", !!active);
+      dom.nowFavBtn.setAttribute("aria-pressed", String(!!active));
       dom.nowFavBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${active ? "#ico-heart" : "#ico-heart-outline"}"/></svg>`;
     }
 
@@ -4169,6 +4227,46 @@
       if (pl) pushPlaylistToCloud(pl);
     }
 
+    // ── MODAL FOCUS MANAGEMENT ──
+    const _modalState = new WeakMap();
+    function openModal(modalEl, firstFocus) {
+      if (!modalEl) return;
+      const prev = document.activeElement;
+      modalEl.classList.remove("hidden");
+      const focusables = () => Array.from(modalEl.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter(el => !el.classList.contains("hidden") && el.offsetParent !== null);
+      const onKey = (e) => {
+        if (e.key === "Escape") { e.preventDefault(); closeModal(modalEl); return; }
+        if (e.key === "Tab") {
+          const f = focusables();
+          if (!f.length) return;
+          const first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      };
+      modalEl.addEventListener("keydown", onKey);
+      _modalState.set(modalEl, { prev, onKey });
+      // Focus the requested element or the first focusable
+      setTimeout(() => {
+        const target = (firstFocus && !firstFocus.disabled) ? firstFocus : focusables()[0];
+        if (target) target.focus();
+      }, 0);
+    }
+    function closeModal(modalEl) {
+      if (!modalEl) return;
+      modalEl.classList.add("hidden");
+      const s = _modalState.get(modalEl);
+      if (s) {
+        modalEl.removeEventListener("keydown", s.onKey);
+        if (s.prev && typeof s.prev.focus === "function") {
+          try { s.prev.focus(); } catch {}
+        }
+        _modalState.delete(modalEl);
+      }
+    }
+
     function openPlaylistModal(song = null) {
       state.pendingPlaylistSong = song;
       dom.plModalTitle.textContent = song ? "Add to playlist" : "New Playlist";
@@ -4182,12 +4280,12 @@
           btn.className = "song-row";
           btn.style.cursor = "pointer";
           btn.innerHTML = `<span></span><div class="row-art" style="width:40px;height:40px;"></div><div class="row-info"><div class="row-title">${pl.name}</div><div class="row-artist">${(state.playlistSongs[pl.id] || []).length} songs</div></div><div></div>`;
-          btn.onclick = async () => { await addSongToPlaylist(pl.id, song); dom.playlistModal.classList.add("hidden"); toast(`Added to ${pl.name}`); };
+          btn.onclick = async () => { await addSongToPlaylist(pl.id, song); closeModal(dom.playlistModal); toast(`Added to ${pl.name}`); };
           dom.plPickerList.appendChild(btn);
         });
       }
 
-      dom.playlistModal.classList.remove("hidden");
+      openModal(dom.playlistModal, dom.plNameInput);
     }
 
     dom.plSave.onclick = () => {
@@ -4203,11 +4301,11 @@
           saveSharedPlaylists(getSharedPlaylists(), sharedSongs);
         }
       }
-      dom.playlistModal.classList.add("hidden");
+      closeModal(dom.playlistModal);
       toast(`Playlist "${name}" created${isShared ? " (shared)" : ""}`);
     };
 
-    dom.plCancel.onclick = () => dom.playlistModal.classList.add("hidden");
+    dom.plCancel.onclick = () => closeModal(dom.playlistModal);
     $("sidebarCreatePlaylist").onclick = () => openPlaylistModal();
     $("libraryCreatePlaylistBtn").onclick = () => openPlaylistModal();
 
@@ -4332,7 +4430,7 @@
         dom.emailInput.value = "";
         $("passwordInput").value = "";
         dom.authMessage.textContent = "";
-        dom.authModal.classList.remove("hidden");
+        openModal(dom.authModal, dom.emailInput);
       }
     };
 
@@ -4348,7 +4446,7 @@
       }
       state.user = found;
       saveAuth();
-      dom.authModal.classList.add("hidden");
+      closeModal(dom.authModal);
       updateAuthUI();
       loadUserData();
       toast(`Welcome back, ${found.name}!`);
@@ -4364,7 +4462,7 @@
     $("passwordInput").addEventListener("keydown", (e) => { if (e.key === "Enter") dom.authSend.click(); });
     dom.emailInput.addEventListener("keydown", (e) => { if (e.key === "Enter") $("passwordInput").focus(); });
 
-    dom.authCancel.onclick = () => dom.authModal.classList.add("hidden");
+    dom.authCancel.onclick = () => closeModal(dom.authModal);
 
     // ── SEARCH ──
     function renderSearchAlbumCard(album) {
@@ -4619,6 +4717,7 @@
         const favBtn = row.querySelector('[data-act="fav"]');
         if (favBtn) {
           favBtn.classList.toggle("is-active", isFav(songId));
+          favBtn.setAttribute("aria-pressed", String(isFav(songId)));
           favBtn.innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${isFav(songId) ? "#ico-heart" : "#ico-heart-outline"}"/></svg>`;
         }
         // Equalizer bars
@@ -4626,9 +4725,9 @@
         if (numEl) {
           const idx = numEl.dataset.idx || "";
           if (isActive && !audio.paused) {
-            numEl.innerHTML = `<div class="eq-bars"><span></span><span></span><span></span></div><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
+            numEl.innerHTML = `<div class="eq-bars" aria-hidden="true"><span></span><span></span><span></span></div><span class="hover-play" aria-hidden="true"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
           } else {
-            numEl.innerHTML = `<span class="num-text">${idx}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
+            numEl.innerHTML = `<span class="num-text">${idx}</span><span class="hover-play" aria-hidden="true"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span>`;
           }
         }
       });
@@ -5413,6 +5512,7 @@
       const song = currentSong();
       const active = song && isFav(song.id);
       $("npFavBtn").classList.toggle("is-active", !!active);
+      $("npFavBtn").setAttribute("aria-pressed", String(!!active));
       $("npFavBtn").innerHTML = `<svg style="width:16px;height:16px;fill:currentColor"><use href="${active ? "#ico-heart" : "#ico-heart-outline"}"/></svg> ${active ? "Liked" : "Like"}`;
     }
     function updateNpControls() {
