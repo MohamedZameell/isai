@@ -75,6 +75,34 @@
 
     .hidden { display: none !important; }
 
+    /* ── Focus rings (keyboard-only) ── */
+    :focus { outline: none; }
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    [role="button"]:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+    .search-box input:focus-visible { outline-offset: 0; }
+
+    /* ── Skip-to-content link ── */
+    .skip-link {
+      position: fixed;
+      top: -100px;
+      left: 8px;
+      z-index: 99999;
+      padding: 10px 16px;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus { top: calc(8px + var(--safe-top)); }
+
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -144,7 +172,7 @@
       font-size: 0.95rem;
       font-weight: 600;
       color: var(--text-sub);
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
       width: 100%;
       text-align: left;
     }
@@ -185,7 +213,7 @@
       display: grid; place-items: center;
       color: var(--text-sub);
       font-size: 1.2rem;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
 
     .sidebar-library-header button:hover {
@@ -333,7 +361,7 @@
       color: var(--text);
       font-size: 0.9rem;
       outline: none;
-      transition: all 0.2s;
+      transition: color 0.2s, background-color 0.2s, transform 0.2s, opacity 0.2s, border-color 0.2s, box-shadow 0.2s;
     }
 
     .search-box input::placeholder { color: var(--text-muted); }
@@ -372,7 +400,7 @@
       display: grid; place-items: center;
       color: var(--text-sub);
       background: transparent;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
 
     .topbar-actions .icon-btn:hover { color: var(--text); transform: scale(1.05); }
@@ -428,7 +456,7 @@
       font-weight: 700;
       border: none;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
     .topbar-sync-btn:hover { background: rgba(255,255,255,0.14); }
     .topbar-sync-btn:active { transform: scale(0.96); }
@@ -476,7 +504,7 @@
       font-size: 0.85rem;
       font-weight: 600;
       white-space: nowrap;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
 
     .chip:hover { background: var(--bg-card-hover); }
@@ -682,7 +710,7 @@
       display: grid; place-items: center;
       color: var(--text-sub);
       font-size: 0.9rem;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
       opacity: 0;
     }
 
@@ -887,7 +915,7 @@
     .player-left .now-actions button {
       color: var(--text-sub);
       font-size: 1rem;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
 
     .player-left .now-actions button:hover { color: var(--text); }
@@ -915,7 +943,7 @@
       display: grid; place-items: center;
       color: var(--text-sub);
       font-size: 1rem;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
       position: relative;
     }
 
@@ -1109,7 +1137,7 @@
       color: var(--text);
       font-size: 0.95rem;
       font-weight: 700;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
 
     .btn-ghost:hover { background: rgba(255,255,255,0.08); }
@@ -1137,7 +1165,7 @@
       color: var(--text-sub);
       border-radius: 2px;
       text-align: left;
-      transition: all 0.1s;
+      transition: color 0.1s, background-color 0.1s, transform 0.1s, opacity 0.1s;
     }
 
     .context-menu button:hover { background: rgba(255,255,255,0.1); color: var(--text); }
@@ -1194,7 +1222,7 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px var(--divider);
       z-index: 300;
       opacity: 0;
-      transition: all 0.3s;
+      transition: opacity 0.3s, transform 0.3s;
       pointer-events: none;
     }
 
@@ -1586,7 +1614,7 @@
       display: flex; align-items: center; justify-content: center; gap: 4px;
       color: var(--text-sub);
       font-size: 1.2rem;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
       padding: 0 6px;
     }
     .np-header button:hover { color: var(--text); background: var(--bg-highlight); }
@@ -1688,7 +1716,7 @@
       border-radius: 50%;
       display: grid; place-items: center;
       color: var(--text-sub);
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
     .np-controls .np-ctrl:hover { color: var(--text); transform: scale(1.1); }
     .np-controls .np-ctrl.is-active { color: var(--accent); }
@@ -1774,7 +1802,7 @@
       color: var(--text-sub);
       text-align: left;
       border-radius: var(--radius-sm);
-      transition: all 0.1s;
+      transition: color 0.1s, background-color 0.1s, transform 0.1s, opacity 0.1s;
     }
     .sleep-menu button:hover { background: rgba(255,255,255,0.1); color: var(--text); }
     .sleep-menu button.active-timer { color: var(--accent); }
@@ -1825,7 +1853,7 @@
       color: var(--text-sub);
       font-size: 0.82rem;
       font-weight: 500;
-      transition: all 0.15s;
+      transition: color 0.15s, background-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1912,8 +1940,9 @@
     .queue-drag-handle {
       cursor: grab;
       color: var(--text-muted);
-      font-size: 1rem;
       padding: 4px;
+      display: inline-grid;
+      place-items: center;
       touch-action: none;
     }
     .queue-drag-handle:active { cursor: grabbing; }
@@ -1945,6 +1974,8 @@
 </head>
 <body>
 
+  <a href="#mainContent" class="skip-link">Skip to content</a>
+
   <!-- SVG ICONS (hidden) -->
   <svg style="display:none">
     <symbol id="ico-home" viewBox="0 0 24 24"><path d="M12.5 3.247a1 1 0 00-1 0L4 7.577V20h4.5v-6a1 1 0 011-1h5a1 1 0 011 1v6H20V7.577l-7.5-4.33z"/></symbol>
@@ -1966,6 +1997,12 @@
     <symbol id="ico-vol-mute" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></symbol>
     <symbol id="ico-repeat-one" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4V7H7v3H5V6a1 1 0 011-1h11V2zM7 22l-4-4 4-4v3h10v-3h2v4a1 1 0 01-1 1H7v3z"/><text x="12" y="15" text-anchor="middle" font-size="8" font-weight="bold" fill="currentColor">1</text></symbol>
     <symbol id="ico-sync" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></symbol>
+    <symbol id="ico-arrow-left" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></symbol>
+    <symbol id="ico-arrow-right" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></symbol>
+    <symbol id="ico-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="ico-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.74 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
+    <symbol id="ico-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></symbol>
+    <symbol id="ico-drag" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></symbol>
   </svg>
 
   <div class="app">
@@ -1989,7 +2026,7 @@
 
       <div class="sidebar-library-header">
         <h3>Your Library</h3>
-        <button id="sidebarCreatePlaylist" title="Create playlist">+</button>
+        <button id="sidebarCreatePlaylist" title="Create playlist" aria-label="Create playlist"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-plus"/></svg></button>
       </div>
 
       <div class="sidebar-playlists" id="sidebarPlaylists">
@@ -2023,24 +2060,24 @@
     </aside>
 
     <!-- ── MAIN ── -->
-    <div class="main-content" id="mainContent">
+    <div class="main-content" id="mainContent" role="main" tabindex="-1">
       <div class="dynamic-bg" id="dynamicBg"></div>
       <div class="topbar">
         <div class="topbar-nav">
-          <button id="historyBack" title="Go back">&#8592;</button>
-          <button id="historyForward" title="Go forward">&#8594;</button>
+          <button id="historyBack" title="Go back" aria-label="Go back"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-arrow-left"/></svg></button>
+          <button id="historyForward" title="Go forward" aria-label="Go forward"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-arrow-right"/></svg></button>
         </div>
         <div class="search-box">
           <svg class="search-icon" style="width:16px;height:16px;fill:currentColor"><use href="#ico-search"/></svg>
           <input id="searchInput" type="search" placeholder="What do you want to listen to?" autocomplete="off" spellcheck="false">
-          <button class="search-clear hidden" id="searchClear">&times;</button>
+          <button class="search-clear hidden" id="searchClear" aria-label="Clear search"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-close"/></svg></button>
         </div>
         <div class="topbar-actions">
           <button id="topbarSyncBtn" class="topbar-sync-btn" title="Sync library across devices">
             <svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-sync"/></svg>
             <span>Sync</span>
           </button>
-          <button id="topbarRefresh" class="icon-btn" title="Refresh">&#8635;</button>
+          <button id="topbarRefresh" class="icon-btn" title="Refresh" aria-label="Refresh"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-refresh"/></svg></button>
           <button id="topbarAuthBtn" class="topbar-auth" title="Account" aria-label="Account">
             <span id="topbarAvatar" class="ta-avatar">?</span>
             <span id="topbarUserName" class="ta-name">Sign in</span>
@@ -2135,7 +2172,7 @@
         <div id="libraryPlaylistsSection" style="margin-top:32px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;">
             <h3 style="margin:0;font-size:1.25rem;">Your Playlists</h3>
-            <button id="libraryCreatePlaylistBtn" title="Create playlist" aria-label="Create playlist" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--text);font-size:1.5rem;line-height:1;border:none;background:var(--bg-elevated);cursor:pointer;flex-shrink:0;padding:0;">+</button>
+            <button id="libraryCreatePlaylistBtn" title="Create playlist" aria-label="Create playlist" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--text);border:none;background:var(--bg-elevated);cursor:pointer;flex-shrink:0;padding:0;"><svg style="width:16px;height:16px;fill:currentColor"><use href="#ico-plus"/></svg></button>
           </div>
           <div id="libraryPlaylistsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;"></div>
         </div>
@@ -2231,8 +2268,8 @@
       <button class="mobile-nav-btn" data-page="search" aria-label="Search">
         <svg><use href="#ico-search"/></svg>Search
       </button>
-      <button class="mobile-nav-btn" data-page="favorites" aria-label="Library">
-        <svg><use href="#ico-heart"/></svg>Library
+      <button class="mobile-nav-btn" data-page="favorites" aria-label="Liked Songs">
+        <svg><use href="#ico-heart"/></svg>Liked
       </button>
     </div>
   </nav>
@@ -2290,7 +2327,7 @@
     <div class="np-header">
       <button id="npClose" aria-label="Close now playing" title="Close">&#8595;</button>
       <span class="np-source" id="npSource">Now Playing</span>
-      <button id="npSleepBtn" title="Sleep timer"><span>&#9202;</span><span class="sleep-countdown hidden" id="sleepCountdown"></span></button>
+      <button id="npSleepBtn" title="Sleep timer" aria-label="Sleep timer"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-clock"/></svg><span class="sleep-countdown hidden" id="sleepCountdown"></span></button>
     </div>
     <div class="np-art-wrap">
       <img id="npArt" src="" alt="">
@@ -2876,17 +2913,18 @@
       autoSongs.forEach(r => addSongId(r.id));
 
       // For the top picks that aren't in /search/songs results, fetch full song details directly.
-      // Cap at 5 to avoid request explosion on every keystroke.
+      // Cap at 5 and batch into one /songs?ids= call to avoid request explosion on every keystroke.
       const missingTop = orderIds.filter(id => !fullById.has(id)).slice(0, 5);
-      await Promise.all(missingTop.map(async (id) => {
+      if (missingTop.length) {
         try {
-          const r = await apiFetch(`/songs/${id}`);
-          const raw = Array.isArray(r?.data) ? r.data[0] : r?.data;
-          if (!raw) return;
-          const song = normalizeSong(raw);
-          if (song.src) fullById.set(song.id, song);
+          const r = await apiFetch(`/songs?ids=${encodeURIComponent(missingTop.join(","))}`);
+          const list = Array.isArray(r?.data) ? r.data : (r?.data ? [r.data] : []);
+          for (const raw of list) {
+            const song = normalizeSong(raw);
+            if (song.src) fullById.set(song.id, song);
+          }
         } catch {}
-      }));
+      }
 
       const songsRaw = [];
       const usedSong = new Set();
@@ -2942,12 +2980,16 @@
       const missing = rawSongs.filter(s => !s.src && s.id);
       if (!missing.length) return rawSongs;
       const byId = new Map();
-      // Phase 1: try /songs/{id} for each missing song
-      await Promise.all(missing.map(async (s) => {
+      // Phase 1: batch /songs?ids=a,b,c — one call per chunk of 25 ids instead of N serial calls
+      const CHUNK = 25;
+      const chunks = [];
+      for (let i = 0; i < missing.length; i += CHUNK) chunks.push(missing.slice(i, i + CHUNK));
+      await Promise.all(chunks.map(async (group) => {
         try {
-          const r = await apiFetch(`/songs/${s.id}`);
-          const raw = Array.isArray(r?.data) ? r.data[0] : r?.data;
-          if (raw) {
+          const ids = group.map(s => s.id).join(",");
+          const r = await apiFetch(`/songs?ids=${encodeURIComponent(ids)}`);
+          const list = Array.isArray(r?.data) ? r.data : (r?.data ? [r.data] : []);
+          for (const raw of list) {
             const n = normalizeSong(raw);
             if (n.src) byId.set(n.id, n);
           }
@@ -3142,7 +3184,7 @@
       row.innerHTML = `
         <span class="row-num" data-idx="${index + 1}"><span class="num-text">${index + 1}</span><span class="hover-play"><svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-play"/></svg></span></span>
         <div class="row-art">${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : ""}</div>
-        <div class="row-info">
+        <div class="row-info" role="button" tabindex="0">
           <div class="row-title">${song.title}</div>
           <div class="row-artist">${song.artist}</div>
         </div>
@@ -3158,7 +3200,9 @@
       `;
 
       // Click to play
-      row.querySelector(".row-info").onclick = () => playSong(song, queue);
+      const rowInfo = row.querySelector(".row-info");
+      rowInfo.setAttribute("aria-label", `Play ${song.title} by ${song.artist}`);
+      rowInfo.onclick = () => playSong(song, queue);
       row.querySelector(".row-art").onclick = () => playSong(song, queue);
 
       // Fav toggle
@@ -3189,7 +3233,37 @@
         return;
       }
       const q = queue || songs;
-      songs.forEach((s, i) => target.appendChild(makeSongRow(s, i, q)));
+      const BATCH = 30;
+
+      // Render first batch synchronously so the user sees content immediately
+      const initial = Math.min(BATCH, songs.length);
+      const firstFrag = document.createDocumentFragment();
+      for (let i = 0; i < initial; i++) firstFrag.appendChild(makeSongRow(songs[i], i, q));
+      target.appendChild(firstFrag);
+
+      if (initial >= songs.length) return;
+
+      // Append the rest progressively as the user scrolls near the bottom
+      let rendered = initial;
+      const sentinel = document.createElement("div");
+      sentinel.className = "list-sentinel";
+      sentinel.style.cssText = "height:1px;width:100%;";
+      target.appendChild(sentinel);
+
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries[0].isIntersecting) return;
+        const end = Math.min(rendered + BATCH, songs.length);
+        const frag = document.createDocumentFragment();
+        for (let i = rendered; i < end; i++) frag.appendChild(makeSongRow(songs[i], i, q));
+        target.insertBefore(frag, sentinel);
+        rendered = end;
+        if (rendered >= songs.length) {
+          observer.disconnect();
+          sentinel.remove();
+        }
+      }, { rootMargin: "400px 0px" });
+
+      observer.observe(sentinel);
     }
 
     // ── RENDER: SIDEBAR PLAYLISTS ──
@@ -3300,6 +3374,16 @@
     }
 
     document.addEventListener("click", () => dom.contextMenu.classList.add("hidden"));
+
+    // Keyboard support for div-based buttons (role="button" tabindex="0")
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const t = e.target;
+      if (!t || t.getAttribute("role") !== "button") return;
+      if (t.tagName === "BUTTON" || t.tagName === "A") return;
+      e.preventDefault();
+      t.click();
+    });
 
     // ── PLAYBACK ──
     function currentSong() { return state.currentQueue[state.currentIndex] || null; }
@@ -3937,6 +4021,9 @@
     function renderSearchAlbumCard(album) {
       const card = document.createElement("div");
       card.className = "card";
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+      card.setAttribute("aria-label", `Play album ${album.title}`);
       card.innerHTML = `
         <div class="card-art">
           ${album.image ? `<img src="${album.image}" alt="${album.title}" loading="lazy">` : ""}
@@ -4290,6 +4377,9 @@
     function renderHomeCard(item) {
       const card = document.createElement("div");
       card.className = "card";
+      card.setAttribute("role", "button");
+      card.tabIndex = 0;
+      card.setAttribute("aria-label", `Play ${item.type === "album" ? "album" : "playlist"} ${item.title}`);
       card._itemId = item.id;
       const sub = item.subtitle
         || (item.songCount ? item.songCount + " songs" : (item.type === "album" ? "Album" : "Playlist"));
@@ -4652,6 +4742,9 @@
       recent.slice(0, 8).forEach(song => {
         const card = document.createElement("div");
         card.className = "recent-card";
+        card.setAttribute("role", "button");
+        card.tabIndex = 0;
+        card.setAttribute("aria-label", `Play ${song.title}`);
         card.innerHTML = `${song.image ? `<img src="${song.image}" alt="" loading="lazy">` : '<div style="width:56px;height:56px;background:var(--bg-elevated)"></div>'}<span class="rc-title">${song.title}</span>`;
         card.onclick = () => playSong(song, [song]);
         grid.appendChild(card);
@@ -4676,7 +4769,7 @@
       history.forEach(q => {
         const chip = document.createElement("button");
         chip.className = "search-history-chip";
-        chip.innerHTML = `${q}<span class="sh-remove">&times;</span>`;
+        chip.innerHTML = `${q}<span class="sh-remove" aria-label="Remove"><svg style="width:12px;height:12px;fill:currentColor"><use href="#ico-close"/></svg></span>`;
         chip.onclick = (e) => {
           if (e.target.classList.contains("sh-remove")) {
             const updated = getSearchHistory().filter(h => h !== q);
@@ -4939,7 +5032,9 @@
             renderSyncedLyrics(synced);
           } else {
             lyricsText.className = "lyrics-text";
-            lyricsText.innerHTML = data.data.lyrics;
+            lyricsText.textContent = data.data.lyrics
+              .replace(/<br\s*\/?>(\r?\n)?/gi, "\n")
+              .replace(/<[^>]+>/g, "");
           }
         } else {
           lyricsText.className = "lyrics-text loading";
@@ -5035,7 +5130,8 @@
         // Add drag handle
         const handle = document.createElement("span");
         handle.className = "queue-drag-handle";
-        handle.textContent = "⠿";
+        handle.setAttribute("aria-label", "Drag to reorder");
+        handle.innerHTML = '<svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-drag"/></svg>';
         handle.draggable = true;
         row.prepend(handle);
         row.style.gridTemplateColumns = "20px 16px 44px 1fr auto";
@@ -5141,7 +5237,8 @@
           // Drag handle
           const handle = document.createElement("span");
           handle.className = "queue-drag-handle";
-          handle.textContent = "\u2807";
+          handle.setAttribute("aria-label", "Drag to reorder");
+          handle.innerHTML = '<svg style="width:14px;height:14px;fill:currentColor"><use href="#ico-drag"/></svg>';
           handle.draggable = true;
           row.prepend(handle);
           row.style.gridTemplateColumns = "20px 16px 44px 1fr auto";
@@ -5206,6 +5303,9 @@
       BROWSE_CATS.forEach(cat => {
         const card = document.createElement("div");
         card.className = "browse-card";
+        card.setAttribute("role", "button");
+        card.tabIndex = 0;
+        card.setAttribute("aria-label", `Browse ${cat.label}`);
         card.style.background = cat.color;
         card.innerHTML = `<h4>${cat.label}</h4>`;
         card.onclick = () => {
