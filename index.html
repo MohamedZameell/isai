@@ -6082,6 +6082,43 @@
       }, { passive: true });
     })();
 
+    // Edge-swipe right → go back. iOS Safari gives PWAs no native edge-swipe-back
+    // (no Safari chrome in standalone mode), so we implement our own.
+    (function initEdgeSwipeBack() {
+      const EDGE_ZONE = 28;   // px from left edge to qualify as an edge gesture
+      const MIN_DX = 70;      // horizontal travel required to trigger
+      const MAX_DY = 50;      // vertical drift allowed (otherwise it's a scroll)
+      let startX = 0, startY = 0, started = false;
+
+      document.addEventListener("touchstart", (e) => {
+        // Mobile only — desktop has the topbar back button
+        if (window.innerWidth > 768) { started = false; return; }
+        const t = e.touches[0];
+        if (t.clientX > EDGE_ZONE) { started = false; return; }
+        // Don't fire while NP overlay or any modal is open — those have their own dismiss UX
+        const npOverlay = $("nowPlayingOverlay");
+        if (npOverlay && !npOverlay.classList.contains("hidden")) { started = false; return; }
+        if (document.querySelector(".modal:not(.hidden)")) { started = false; return; }
+        startX = t.clientX;
+        startY = t.clientY;
+        started = true;
+      }, { passive: true });
+
+      document.addEventListener("touchend", (e) => {
+        if (!started) return;
+        started = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = Math.abs(t.clientY - startY);
+        if (dx > MIN_DX && dy < MAX_DY && state.pageHistory.length) {
+          haptic();
+          dom.historyBack.click();
+        }
+      }, { passive: true });
+
+      document.addEventListener("touchcancel", () => { started = false; }, { passive: true });
+    })();
+
     // Also update now playing on play/pause
     audio.onplay = () => {
       updatePlayBtn(true); updateNpControls(); updateMobPlayBtn(true); refreshActiveSongRows();
