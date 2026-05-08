@@ -3052,7 +3052,7 @@
       const search = await apiFetch(`/search/playlists?query=${encodeURIComponent(query)}&limit=1`);
       const pid = search?.data?.results?.[0]?.id;
       if (!pid) throw new Error("No playlist found");
-      const pl = await apiFetch(`/playlists?id=${encodeURIComponent(pid)}`);
+      const pl = await apiFetch(`/playlists?id=${encodeURIComponent(pid)}&limit=100`);
       const songs = (pl?.data?.songs || []).map(normalizeSong).filter(s => s.src).map(enrichSong);
       if (!songs.length) throw new Error("No playable songs");
       localStorage.setItem(CACHE_KEY, JSON.stringify({ q: query, ts: Date.now(), songs }));
@@ -3223,7 +3223,8 @@
         if (typeof _removeLoadMoreBtn === "function") _removeLoadMoreBtn();
         dom.playlistViewHeader.innerHTML = `<div class="skeleton" style="height:80px;width:100%;border-radius:8px"></div>`;
         showSongListSkeleton(dom.playlistViewSongs, 8);
-        const al = await apiFetch(`/albums?id=${encodeURIComponent(albumId)}`);
+        // Default API page size is 10 — request 50 so big OSTs/compilations don't get truncated.
+        const al = await apiFetch(`/albums?id=${encodeURIComponent(albumId)}&limit=50`);
         const data = al?.data || {};
         let rawSongs = (data.songs || []).map(normalizeSong);
         rawSongs = await enrichMissingSrc(rawSongs);
@@ -5112,7 +5113,7 @@
         if (typeof _removeLoadMoreBtn === "function") _removeLoadMoreBtn();
         dom.playlistViewHeader.innerHTML = `<div class="skeleton" style="height:80px;width:100%;border-radius:8px"></div>`;
         showSongListSkeleton(dom.playlistViewSongs, 8);
-        const pl = await apiFetch(`/playlists?id=${encodeURIComponent(playlistId)}`);
+        const pl = await apiFetch(`/playlists?id=${encodeURIComponent(playlistId)}&limit=100`);
         let rawSongs = (pl?.data?.songs || []).map(normalizeSong);
         rawSongs = await enrichMissingSrc(rawSongs);
         const songs = rawSongs.map(enrichSong);
