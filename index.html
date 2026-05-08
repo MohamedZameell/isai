@@ -2270,6 +2270,7 @@
     <symbol id="ico-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
     <symbol id="ico-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.74 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
     <symbol id="ico-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></symbol>
+    <symbol id="ico-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 1 0-3-3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0 0 6c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65a2.92 2.92 0 1 0 2.92-2.92z"/></symbol>
     <symbol id="ico-drag" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></symbol>
     <symbol id="ico-check" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm-1.59 14.59L5.83 12l1.41-1.41 3.17 3.17 6.34-6.34 1.41 1.41z"/></symbol>
   </svg>
@@ -2953,6 +2954,43 @@
       let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
     }
 
+    // Phase D helpers
+    // Total duration in seconds → "1 hr 24 min" / "37 min" / "0 min"
+    function formatTotalDuration(secs) {
+      if (!secs || secs < 0) return "";
+      const totalMin = Math.round(secs / 60);
+      if (totalMin < 60) return `${totalMin} min`;
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return m === 0 ? `${h} hr` : `${h} hr ${m} min`;
+    }
+
+    // Share via the Web Share API on mobile, fall back to clipboard + toast.
+    // Web Share is HTTPS-only and may throw AbortError when the user cancels;
+    // we swallow that quietly so it doesn't surface as a toast.
+    async function shareItem({ title, url, text }) {
+      if (!url) { toast("Nothing to share"); return; }
+      const payload = { title: title || "Cove", text: text || title, url };
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        try { await navigator.share(payload); return; }
+        catch (err) { if (err && err.name === "AbortError") return; }
+      }
+      try {
+        if (navigator?.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+          toast("Link copied to clipboard");
+          return;
+        }
+      } catch {}
+      // Last-resort fallback: textarea + execCommand for old contexts.
+      const ta = document.createElement("textarea");
+      ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); toast("Link copied to clipboard"); }
+      catch { toast("Couldn't copy link"); }
+      finally { ta.remove(); }
+    }
+
     function toast(msg, type) {
       dom.toast.textContent = msg;
       dom.toast.classList.toggle("error", type === "error");
@@ -3458,6 +3496,10 @@
         const cover = (imgs.length ? imgs[imgs.length - 1]?.url : "") || songs[0]?.image || "";
         const name = decode(data.name || "Album");
         const sub = decode(data.description || (data.year ? `${data.year} \u2022 Album` : "Album"));
+        // Phase D: total duration of all tracks, formatted "1 hr 24 min" or "37 min".
+        const totalSecs = songs.reduce((s, x) => s + (parseInt(x.duration) || 0), 0);
+        const totalLabel = totalSecs > 0 ? formatTotalDuration(totalSecs) : "";
+        const shareUrl = data.url || data.perma_url || `https://www.jiosaavn.com/album/_/${albumId}`;
         dom.playlistViewHeader.innerHTML = `
           <div style="display:flex;align-items:center;gap:24px;">
             <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
@@ -3466,12 +3508,13 @@
             <div>
               <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Album</p>
               <h2>${escapeHtml(name)}</h2>
-              <p style="color:var(--text-sub);font-size:0.85rem">${escapeHtml(sub)}\u2022 ${songs.length} songs</p>
+              <p style="color:var(--text-sub);font-size:0.85rem">${escapeHtml(sub)} \u2022 ${songs.length} songs${totalLabel ? ` \u2022 ${totalLabel}` : ""}</p>
             </div>
           </div>
           <div class="pl-header-controls">
             <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
             <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
+            <button class="ctrl-btn" id="plViewShare" title="Share album" aria-label="Share album" style="opacity:1;color:var(--text-sub);"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-share"/></svg></button>
           </div>
         `;
         renderSongList(dom.playlistViewSongs, songs, songs);
@@ -3482,6 +3525,8 @@
           if (!state.shuffleOn) { state.shuffleOn = true; updateShuffleUI(); persistSettings({ shuffle_enabled: true }); }
           playSongAt(Math.floor(Math.random() * songs.length), songs);
         };
+        const shareBtn = $("plViewShare");
+        if (shareBtn) shareBtn.onclick = () => shareItem({ title: name, url: shareUrl, text: `${name} on Cove` });
       } catch {
         toast("Failed to load album");
       }
@@ -5451,6 +5496,9 @@
           const plName = decode(pl?.data?.name || "Playlist");
           const cover = songs[0]?.image || "";
           const saved = isPlaylistSaved(playlistId);
+          const totalSecs = songs.reduce((s, x) => s + (parseInt(x.duration) || 0), 0);
+          const totalLabel = totalSecs > 0 ? formatTotalDuration(totalSecs) : "";
+          const shareUrl = pl?.data?.url || pl?.data?.perma_url || `https://www.jiosaavn.com/featured/_/${playlistId}`;
           dom.playlistViewHeader.innerHTML = `
             <div style="display:flex;align-items:center;gap:24px;">
               <div style="width:80px;height:80px;border-radius:4px;background:var(--bg-elevated);overflow:hidden;">
@@ -5459,13 +5507,14 @@
               <div>
                 <p style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--text-sub)">Playlist</p>
                 <h2>${escapeHtml(plName)}</h2>
-                <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs</p>
+                <p style="color:var(--text-sub);font-size:0.85rem">${songs.length} songs${totalLabel ? ` • ${totalLabel}` : ""}</p>
               </div>
             </div>
             <div class="pl-header-controls">
               <button class="pl-shuffle-play" id="plViewPlay" title="Play"><svg><use href="#ico-play"/></svg></button>
               <button class="ctrl-btn" id="plViewShuffle" title="Shuffle play" style="opacity:1"><svg style="width:20px;height:20px;fill:currentColor"><use href="#ico-shuffle"/></svg></button>
               <button class="ctrl-btn" id="plViewSave" title="${saved ? "Saved to your library" : "Save to your library"}" aria-label="Save playlist" aria-pressed="${saved ? "true" : "false"}" style="opacity:1;color:${saved ? "var(--accent)" : "var(--text-sub)"};"><svg style="width:20px;height:20px;fill:currentColor"><use href="#${saved ? "ico-heart" : "ico-heart-outline"}"/></svg></button>
+              <button class="ctrl-btn" id="plViewShare" title="Share playlist" aria-label="Share playlist" style="opacity:1;color:var(--text-sub);"><svg style="width:18px;height:18px;fill:currentColor"><use href="#ico-share"/></svg></button>
             </div>
           `;
           renderSongList(dom.playlistViewSongs, songs, songs);
@@ -5499,6 +5548,8 @@
               renderLibrarySavedPlaylists();
             };
           }
+          const shareBtn = $("plViewShare");
+          if (shareBtn) shareBtn.onclick = () => shareItem({ title: plName, url: shareUrl, text: `${plName} on Cove` });
         }
       } catch (err) {
         toast("Failed to load playlist");
