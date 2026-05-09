@@ -535,6 +535,91 @@
     .page { display: none; padding: 0 32px 32px; }
     .page.active { display: block; }
 
+    /* ── SETTINGS PAGE ── */
+    .settings-section {
+      max-width: 720px;
+      margin: 0 0 32px;
+      padding: 18px 22px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-md);
+    }
+    .settings-section-title {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin: 0 0 14px;
+    }
+    .settings-section-sub { color: var(--text-sub); font-size: 0.85rem; margin: 0; }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-top: 1px solid var(--divider);
+    }
+    .settings-row:first-of-type { border-top: none; padding-top: 0; }
+    .settings-row-label { flex: 1; min-width: 0; }
+    .settings-row-title { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+    .settings-row-sub { font-size: 0.82rem; color: var(--text-sub); margin-top: 3px; line-height: 1.4; }
+    .settings-row a.btn-ghost { text-decoration: none; }
+
+    .settings-select {
+      background: var(--bg-base);
+      color: var(--text);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .settings-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* iOS-style toggle */
+    .settings-toggle {
+      position: relative;
+      width: 46px; height: 26px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .settings-toggle input {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+    .settings-toggle-track {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
+      transition: background 0.2s;
+    }
+    .settings-toggle-track::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .settings-toggle input:checked ~ .settings-toggle-track { background: var(--accent); }
+    .settings-toggle input:checked ~ .settings-toggle-track::after { transform: translateX(20px); }
+    .settings-toggle input:focus-visible ~ .settings-toggle-track { box-shadow: 0 0 0 2px var(--accent); }
+
+    /* Quality badge in now-playing */
+    .quality-badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px;
+      margin-left: 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.10);
+      color: var(--text-sub);
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
     .page-header {
       padding: 24px 0 20px;
     }
@@ -2623,6 +2708,7 @@
     <symbol id="ico-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
     <symbol id="ico-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.74 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
     <symbol id="ico-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></symbol>
+    <symbol id="ico-settings" viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 0 0 .05-.94 7.07 7.07 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.06 7.06 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7.06 7.06 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.66 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96a7.06 7.06 0 0 0 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54a7.06 7.06 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64ZM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5Z"/></symbol>
     <symbol id="ico-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 1 0-3-3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0 0 6c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65a2.92 2.92 0 1 0 2.92-2.92z"/></symbol>
     <symbol id="ico-drag" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></symbol>
     <symbol id="ico-check" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm-1.59 14.59L5.83 12l1.41-1.41 3.17 3.17 6.34-6.34 1.41 1.41z"/></symbol>
@@ -2648,6 +2734,9 @@
         </button>
         <button class="sidebar-nav-item" data-page="charts">
           <svg><use href="#ico-clock"/></svg><span>Charts</span>
+        </button>
+        <button class="sidebar-nav-item" data-page="settings" aria-label="Settings">
+          <svg><use href="#ico-settings"/></svg><span>Settings</span>
         </button>
       </nav>
 
@@ -2893,6 +2982,122 @@
           </div>
         </div>
         <div id="downloadsList" class="song-list"></div>
+      </section>
+
+      <!-- SETTINGS PAGE -->
+      <section id="settingsPage" class="page">
+        <div class="page-header"><h2>Settings</h2></div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Account</h3>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Signed in as</div>
+              <div class="settings-row-sub" id="settingsAcctEmail">Not signed in</div>
+            </div>
+            <button class="btn-ghost" id="settingsAuthBtn">Sign in</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Playback</h3>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Audio quality</div>
+              <div class="settings-row-sub">Lower saves data; "Auto" picks the highest available (up to 320 kbps).</div>
+            </div>
+            <select id="settingsQuality" class="settings-select">
+              <option value="auto">Auto (best)</option>
+              <option value="320">320 kbps</option>
+              <option value="160">160 kbps</option>
+              <option value="96">96 kbps</option>
+              <option value="48">48 kbps</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Smart Radio</div>
+              <div class="settings-row-sub">Refill the queue with similar songs as you near the end.</div>
+            </div>
+            <label class="settings-toggle"><input type="checkbox" id="settingsRadio"><span class="settings-toggle-track"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Auto-queue</div>
+              <div class="settings-row-sub">Continue with suggestions when a playlist ends.</div>
+            </div>
+            <label class="settings-toggle"><input type="checkbox" id="settingsAutoQ"><span class="settings-toggle-track"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Crossfade</div>
+              <div class="settings-row-sub">Blend the last 3 s of each track into the next.</div>
+            </div>
+            <label class="settings-toggle"><input type="checkbox" id="settingsCrossfade"><span class="settings-toggle-track"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Show quality badge</div>
+              <div class="settings-row-sub">Display "320 kbps" / "160 kbps" on the now-playing screen.</div>
+            </div>
+            <label class="settings-toggle"><input type="checkbox" id="settingsQualityBadge"><span class="settings-toggle-track"></span></label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Library</h3>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Re-pick languages &amp; artists</div>
+              <div class="settings-row-sub">Run onboarding again to choose a fresh seed.</div>
+            </div>
+            <button class="btn-ghost" id="settingsRedoOnboard">Reset</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Reset taste profile</div>
+              <div class="settings-row-sub">Wipes the listening-history-based personalization (artist + language scores, module bandit).</div>
+            </div>
+            <button class="btn-ghost" id="settingsResetTaste">Clear</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Clear app cache</div>
+              <div class="settings-row-sub">Removes cached homepage + search data. Forces fresh fetches on next visit.</div>
+            </div>
+            <button class="btn-ghost" id="settingsClearCache">Clear</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Recently-played history</div>
+              <div class="settings-row-sub">Clears the recents list and "On Repeat" play counts.</div>
+            </div>
+            <button class="btn-ghost" id="settingsClearRecents">Clear</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Languages</h3>
+          <p class="settings-section-sub">Tap to toggle. Drives row order on the home page.</p>
+          <div id="settingsLangs" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">About</h3>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Cove</div>
+              <div class="settings-row-sub">A pirate-themed JioSaavn streamer. Built by Zameel with Claude + Codex.</div>
+            </div>
+            <a class="btn-ghost" href="https://github.com/MohamedZameell/cove" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <div class="settings-row-title">Audio</div>
+              <div class="settings-row-sub">320 kbps AAC where available, sourced from JioSaavn's CDN.</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- QUEUE PAGE -->
@@ -3862,13 +4067,31 @@
       const imgs = Array.isArray(s.image) ? s.image : [];
       const dls = Array.isArray(s.downloadUrl) ? s.downloadUrl : [];
       const artists = s.primaryArtists || s.artists?.primary?.map(a => a.name).join(", ") || s.artist || "Unknown";
+      // Honor the user's audio-quality preference. "auto" picks the highest variant
+      // (last entry, JioSaavn sorts ascending). Otherwise we look for a matching
+      // quality string ("320kbps") and fall back to the highest available.
+      let _src = "";
+      let _q = "";
+      if (dls.length) {
+        const pref = (typeof getAudioQualityPref === "function") ? getAudioQualityPref() : "auto";
+        if (pref !== "auto") {
+          const match = dls.find(d => (d.quality || "").startsWith(pref));
+          if (match?.url) { _src = match.url; _q = match.quality || ""; }
+        }
+        if (!_src) {
+          const top = dls[dls.length - 1];
+          _src = top?.url || "";
+          _q = top?.quality || "";
+        }
+      }
       return {
         id: s.id || `${s.name}-${artists}`,
         title: decode(s.name || s.title || "Untitled"),
         artist: decode(artists),
         duration: Number(s.duration) || 0,
         image: (imgs.length ? imgs[imgs.length - 1]?.url : "") || imgs[0]?.url || "",
-        src: (dls.length ? dls[dls.length - 1]?.url : "") || "",
+        src: _src,
+        quality: _q,
         year: s.year || "",
         album: decode(s.album?.name || s.album || ""),
         language: (s.language || "").toLowerCase()
@@ -5994,6 +6217,183 @@
     // they signed in before onboarding existed). Run AFTER taste profile is
     // loaded so the "has plays" check works.
     setTimeout(() => { try { maybeShowOnboarding(); } catch {} }, 800);
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // ── SETTINGS PAGE ──
+    // Single source of truth for user-tunable preferences. Reads from / writes
+    // to localStorage with simple keys. Audio quality preference is honored by
+    // normalizeSong() when picking the JioSaavn downloadUrl variant.
+    // ══════════════════════════════════════════════════════════════════════════
+    const PREF = {
+      audioQuality: "isai_pref_quality",     // "auto" | "320" | "160" | "96" | "48"
+      qualityBadge: "isai_pref_quality_badge", // "1" | "0"
+      smartRadio:   "isai_pref_smart_radio", // "1" | "0" — default 0 (already off in state)
+      autoQueue:    "isai_pref_auto_queue",  // "1" | "0" — default 1
+      crossfade:    "isai_pref_crossfade"    // "1" | "0" — default 1
+    };
+
+    function getAudioQualityPref() {
+      try { return localStorage.getItem(PREF.audioQuality) || "auto"; } catch { return "auto"; }
+    }
+    function getQualityBadgePref() {
+      try { return localStorage.getItem(PREF.qualityBadge) === "1"; } catch { return false; }
+    }
+
+    // Apply persisted toggles to the live state at boot so behavior matches the UI
+    (function applyPrefsAtBoot() {
+      try {
+        const radio = localStorage.getItem(PREF.smartRadio);
+        if (radio !== null) state.radioMode = radio === "1";
+        const aq = localStorage.getItem(PREF.autoQueue);
+        if (aq !== null) state.autoQueueEnabled = aq === "1";
+        const xf = localStorage.getItem(PREF.crossfade);
+        if (xf !== null) state.crossfade = xf === "1";
+      } catch {}
+    })();
+
+    function _confirmCove(msg) {
+      // Plain confirm; can be swapped for a custom modal later.
+      try { return window.confirm(msg); } catch { return true; }
+    }
+
+    function renderSettingsPage() {
+      // Account
+      const acctEmail = $("settingsAcctEmail");
+      const acctBtn = $("settingsAuthBtn");
+      if (state.user) {
+        acctEmail.textContent = `${state.user.name} (${state.user.email})`;
+        acctBtn.textContent = "Sign out";
+        acctBtn.onclick = () => dom.authTrigger.click();
+      } else {
+        acctEmail.textContent = "Not signed in";
+        acctBtn.textContent = "Sign in";
+        acctBtn.onclick = () => dom.authTrigger.click();
+      }
+
+      // Playback
+      const qSel = $("settingsQuality");
+      qSel.value = getAudioQualityPref();
+      qSel.onchange = () => {
+        try { localStorage.setItem(PREF.audioQuality, qSel.value); } catch {}
+        toast(`Audio quality: ${qSel.options[qSel.selectedIndex].text}`);
+      };
+      const wireToggle = (id, key, applyFn, label) => {
+        const el = $(id);
+        if (!el) return;
+        let cur;
+        try {
+          const stored = localStorage.getItem(key);
+          cur = stored !== null ? stored === "1" : (applyFn(undefined, true));
+        } catch { cur = applyFn(undefined, true); }
+        el.checked = cur;
+        el.onchange = () => {
+          try { localStorage.setItem(key, el.checked ? "1" : "0"); } catch {}
+          applyFn(el.checked, false);
+          toast(`${label} ${el.checked ? "on" : "off"}`);
+        };
+      };
+      wireToggle("settingsRadio", PREF.smartRadio,
+        (v, readOnly) => { if (!readOnly) state.radioMode = !!v; return state.radioMode; }, "Smart Radio");
+      wireToggle("settingsAutoQ", PREF.autoQueue,
+        (v, readOnly) => { if (!readOnly) state.autoQueueEnabled = !!v; return state.autoQueueEnabled !== false; }, "Auto-queue");
+      wireToggle("settingsCrossfade", PREF.crossfade,
+        (v, readOnly) => { if (!readOnly) state.crossfade = !!v; return state.crossfade !== false; }, "Crossfade");
+      wireToggle("settingsQualityBadge", PREF.qualityBadge,
+        (v, readOnly) => readOnly ? getQualityBadgePref() : (updateQualityBadge?.(), v), "Quality badge");
+
+      // Library
+      $("settingsRedoOnboard").onclick = () => {
+        if (!_confirmCove("Re-run onboarding? Your existing follows will be kept.")) return;
+        try { localStorage.removeItem(userKey("onboarded")); } catch {}
+        if (typeof showOnboarding === "function") showOnboarding();
+      };
+      $("settingsResetTaste").onclick = () => {
+        if (!_confirmCove("Clear your listening-based personalization? Affects row order, taste-driven rows, and the bandit ranker. Followed artists are kept.")) return;
+        try {
+          localStorage.removeItem(userKey("taste"));
+          localStorage.removeItem(userKey("playCounts"));
+        } catch {}
+        toast("Taste profile cleared");
+      };
+      $("settingsClearCache").onclick = () => {
+        try {
+          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(DEAD_KEY);
+        } catch {}
+        toast("Cache cleared");
+        if (typeof loadInitial === "function") loadInitial(true);
+      };
+      $("settingsClearRecents").onclick = () => {
+        if (!_confirmCove("Clear recently-played + On Repeat history?")) return;
+        try {
+          localStorage.removeItem(userKey("recent"));
+          localStorage.removeItem(userKey("playCounts"));
+        } catch {}
+        if (typeof renderRecentlyPlayed === "function") renderRecentlyPlayed();
+        toast("Recents cleared");
+      };
+
+      // Languages — chips reuse the .chip class from onboarding
+      const langWrap = $("settingsLangs");
+      const ALL_LANGS = (typeof ONBOARD_LANGS !== "undefined") ? ONBOARD_LANGS : [
+        { key: "tamil", label: "Tamil" }, { key: "hindi", label: "Hindi" },
+        { key: "english", label: "English" }, { key: "malayalam", label: "Malayalam" },
+        { key: "telugu", label: "Telugu" }, { key: "kannada", label: "Kannada" },
+        { key: "punjabi", label: "Punjabi" }, { key: "marathi", label: "Marathi" },
+        { key: "bengali", label: "Bengali" }, { key: "gujarati", label: "Gujarati" },
+        { key: "urdu", label: "Urdu" }, { key: "spanish", label: "Spanish" },
+        { key: "korean", label: "Korean" }
+      ];
+      const sel = new Set((state.userLangs || []).filter(Boolean));
+      langWrap.innerHTML = "";
+      ALL_LANGS.forEach(({ key, label }) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chip" + (sel.has(key) ? " selected" : "");
+        btn.setAttribute("aria-pressed", sel.has(key) ? "true" : "false");
+        btn.textContent = label;
+        btn.onclick = () => {
+          if (sel.has(key)) sel.delete(key); else sel.add(key);
+          btn.classList.toggle("selected");
+          btn.setAttribute("aria-pressed", sel.has(key) ? "true" : "false");
+          state.userLangs = Array.from(sel);
+          try {
+            const cached = safeParse(localStorage.getItem(LOC_KEY), {}) || {};
+            cached.langs = state.userLangs;
+            cached.ts = Date.now();
+            localStorage.setItem(LOC_KEY, JSON.stringify(cached));
+          } catch {}
+        };
+        langWrap.appendChild(btn);
+      });
+    }
+
+    // Show + render the page when the user navigates to it
+    const _origSwitchPage = switchPage;
+    switchPage = function(page, ...rest) {
+      const r = _origSwitchPage.call(this, page, ...rest);
+      if (page === "settings") {
+        try { renderSettingsPage(); } catch (err) { console.warn("[settings] render failed:", err); }
+      }
+      return r;
+    };
+
+    // Quality badge in the now-playing overlay (added once, shown/hidden by pref)
+    function updateQualityBadge() {
+      const npArtist = $("npArtist");
+      if (!npArtist) return;
+      // Remove any prior badge
+      npArtist.querySelectorAll(".quality-badge").forEach(b => b.remove());
+      if (!getQualityBadgePref()) return;
+      const cur = currentSong();
+      if (!cur?.quality) return;
+      const span = document.createElement("span");
+      span.className = "quality-badge";
+      span.textContent = cur.quality.replace(/kbps$/i, " kbps");
+      npArtist.appendChild(span);
+    }
+    // Re-run when track changes
+    audio.addEventListener("loadedmetadata", () => { try { updateQualityBadge(); } catch {} });
 
     // ── SEARCH ──
     function renderSearchAlbumCard(album) {
