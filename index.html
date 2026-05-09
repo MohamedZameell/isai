@@ -5618,29 +5618,64 @@
         doneBtn.disabled = true;
         artWrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-sub);padding:24px;">Loading artists…</div>';
 
-        // Use the cached /modules payload if home already loaded; otherwise fetch fresh.
-        let modules = state._modulesData;
-        if (!modules) {
-          try { modules = await fetchHomeModules(); state._modulesData = modules; } catch {}
-        }
-        // Synthesize artist tiles from new_albums credits across selected langs.
+        // Build the artist pool by querying /search/artists per selected language.
+        // JioSaavn's search ranks by popularity, so this returns canonical artists
+        // (Anirudh, A.R. Rahman, Ed Sheeran, Arijit Singh) instead of obscure
+        // credits from whatever happens to be on this week's new_albums.
+        // Per-language quota of 8 keeps the grid balanced across picks.
         const seen = new Map();
-        for (const raw of (modules?.new_albums || [])) {
-          const lang = (raw.language || "").toLowerCase();
-          if (state.userLangs.length && !state.userLangs.includes(lang)) continue;
-          const credited = raw?.more_info?.artistMap?.artists || [];
-          for (const a of credited) {
-            if (!a?.id || !a?.name || !a?.image) continue;
-            const role = (a.role || "").toLowerCase();
-            if (role && role !== "singer" && role !== "primary_artist") continue;
-            if (seen.has(a.id)) continue;
-            seen.set(a.id, {
-              id: a.id, name: decode(a.name), image: a.image,
-              role: a.role || "Artist", followers: 0
-            });
+        const PER_LANG = 8;
+        const queriesPerLang = (lang) => {
+          // "top {lang} singers" tends to surface vocalists; the bare lang name is a fallback.
+          return [`top ${lang} singers`, `${lang} singers`, `${lang}`];
+        };
+        for (const lang of state.userLangs) {
+          let added = 0;
+          for (const q of queriesPerLang(lang)) {
+            if (added >= PER_LANG) break;
+            try {
+              const r = await apiFetch(`/search/artists?query=${encodeURIComponent(q)}&page=0&limit=15`);
+              const results = r?.data?.results || [];
+              for (const a of results) {
+                if (added >= PER_LANG) break;
+                if (!a?.id || !a?.name) continue;
+                if (seen.has(a.id)) continue;
+                const imgs = Array.isArray(a.image) ? a.image : [];
+                const image = (imgs.length ? imgs[imgs.length - 1]?.url : "")
+                  || (typeof a.image === "string" ? a.image : "");
+                if (!image) continue;
+                seen.set(a.id, {
+                  id: a.id, name: decode(a.name), image,
+                  role: a.role || "Artist", followers: 0
+                });
+                added++;
+              }
+            } catch {}
+          }
+        }
+        // Fallback: if search totally failed, scrape /modules credits (old behavior).
+        if (seen.size < 6) {
+          let modules = state._modulesData;
+          if (!modules) {
+            try { modules = await fetchHomeModules(); state._modulesData = modules; } catch {}
+          }
+          for (const raw of (modules?.new_albums || [])) {
+            const lang = (raw.language || "").toLowerCase();
+            if (state.userLangs.length && !state.userLangs.includes(lang)) continue;
+            const credited = raw?.more_info?.artistMap?.artists || [];
+            for (const a of credited) {
+              if (!a?.id || !a?.name || !a?.image) continue;
+              const role = (a.role || "").toLowerCase();
+              if (role && role !== "singer" && role !== "primary_artist") continue;
+              if (seen.has(a.id)) continue;
+              seen.set(a.id, {
+                id: a.id, name: decode(a.name), image: a.image,
+                role: a.role || "Artist", followers: 0
+              });
+              if (seen.size >= 24) break;
+            }
             if (seen.size >= 24) break;
           }
-          if (seen.size >= 24) break;
         }
 
         artWrap.innerHTML = "";
