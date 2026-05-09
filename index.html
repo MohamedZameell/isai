@@ -3662,7 +3662,10 @@
     }
     function saveAuth() { /* no-op — Supabase SDK handles persistence */ }
     function loadFavorites() { state.favorites = safeParse(localStorage.getItem(userKey("favorites")), []); }
-    function saveFavorites() { localStorage.setItem(userKey("favorites"), JSON.stringify(state.favorites)); }
+    function saveFavorites() {
+      try { localStorage.setItem(userKey("favorites"), JSON.stringify(state.favorites)); }
+      catch (e) { console.warn("[storage] saveFavorites failed:", e?.message || e); }
+    }
     function loadPlaylists() {
       state.playlists = safeParse(localStorage.getItem(userKey("playlists")), []);
       state.playlistSongs = safeParse(localStorage.getItem(userKey("playlistSongs")), {});
@@ -3671,7 +3674,10 @@
     // ── FOLLOWED ARTISTS ── (Phase B: Library)
     // Stored as [{id, name, image, role, followers}], deduped by id.
     function loadFollowedArtists() { state.followedArtists = safeParse(localStorage.getItem(userKey("followedArtists")), []); }
-    function saveFollowedArtists() { localStorage.setItem(userKey("followedArtists"), JSON.stringify(state.followedArtists || [])); }
+    function saveFollowedArtists() {
+      try { localStorage.setItem(userKey("followedArtists"), JSON.stringify(state.followedArtists || [])); }
+      catch (e) { console.warn("[storage] saveFollowedArtists failed:", e?.message || e); }
+    }
     function isArtistFollowed(id) { return !!(state.followedArtists || []).find(a => a.id === id); }
     function followArtist(artist) {
       if (!artist?.id) return;
@@ -3699,7 +3705,10 @@
     // User-created playlists already live in state.playlists; this is a separate
     // bucket so the two are distinguishable in the Library UI.
     function loadSavedPlaylists() { state.savedPlaylists = safeParse(localStorage.getItem(userKey("savedPlaylists")), []); }
-    function saveSavedPlaylists() { localStorage.setItem(userKey("savedPlaylists"), JSON.stringify(state.savedPlaylists || [])); }
+    function saveSavedPlaylists() {
+      try { localStorage.setItem(userKey("savedPlaylists"), JSON.stringify(state.savedPlaylists || [])); }
+      catch (e) { console.warn("[storage] saveSavedPlaylists failed:", e?.message || e); }
+    }
     function isPlaylistSaved(id) { return !!(state.savedPlaylists || []).find(p => p.id === id); }
     function savePlaylistRef(pl) {
       if (!pl?.id) return;
@@ -4011,11 +4020,20 @@
       }
     }
     function savePlaylists() {
-      localStorage.setItem(userKey("playlists"), JSON.stringify(state.playlists));
-      localStorage.setItem(userKey("playlistSongs"), JSON.stringify(state.playlistSongs));
+      try {
+        localStorage.setItem(userKey("playlists"), JSON.stringify(state.playlists));
+        localStorage.setItem(userKey("playlistSongs"), JSON.stringify(state.playlistSongs));
+      } catch (e) {
+        console.warn("[storage] savePlaylists failed:", e?.message || e);
+        toast("Storage full — couldn't save playlists. Try clearing cache in Settings.", "error");
+        return;
+      }
     }
     function loadDlMeta() { state.downloads = safeParse(localStorage.getItem(userKey("downloads")), []); }
-    function saveDlMeta() { localStorage.setItem(userKey("downloads"), JSON.stringify(state.downloads)); }
+    function saveDlMeta() {
+      try { localStorage.setItem(userKey("downloads"), JSON.stringify(state.downloads)); }
+      catch (e) { console.warn("[storage] saveDlMeta failed:", e?.message || e); }
+    }
     function loadSettings() { return safeParse(localStorage.getItem(userKey("settings")), {}); }
     function saveSettings(partial) {
       const cur = loadSettings();
@@ -5036,6 +5054,12 @@
 
     async function playSongAt(index, queue) {
       if (!queue?.length || !queue[index]) return;
+      // B7: any user-initiated play that targets a different song than the
+      // staged resume pointer must clear it, so the resume seek doesn't
+      // accidentally fire on the new track if the IDs happen to coincide.
+      if (state._pendingResume && queue[index]?.id !== state._pendingResume.songId) {
+        state._pendingResume = null;
+      }
       // Login gate — block playback until signed in.
       if (!state.user) {
         toast("Sign in to play music");
@@ -5314,6 +5338,11 @@
 
     // ── PLAYER EVENTS ──
     audio.ontimeupdate = () => {
+      // B7 resume save (throttled to ~5s, single handler — was previously
+      // duplicated by an additional addEventListener that has been removed).
+      if (typeof _lastResumeSave !== "undefined" && Date.now() - _lastResumeSave > 5000) {
+        if (typeof saveResumePoint === "function") saveResumePoint();
+      }
       if (!audio.duration) return;
       const pct = (audio.currentTime / audio.duration) * 100;
       dom.progressFill.style.width = pct + "%";
@@ -5947,9 +5976,21 @@
       showOnboarding();
     }
 
+    let _onboardingOpen = false;
+    // Watch the onboarding modal's class so any close path (Esc, outside-click,
+    // closeModal call) releases the re-entry guard.
+    (function watchOnboardingClose() {
+      const m = document.getElementById("onboardModal");
+      if (!m) return;
+      new MutationObserver(() => {
+        if (m.classList.contains("hidden")) _onboardingOpen = false;
+      }).observe(m, { attributes: true, attributeFilter: ["class"] });
+    })();
     function showOnboarding() {
+      if (_onboardingOpen) return; // re-entry guard — prevents double mutation of state.userLangs mid-fetch
       const modal = $("onboardModal");
       if (!modal) return;
+      _onboardingOpen = true;
       const step1 = $("onboardStep1");
       const step2 = $("onboardStep2");
       const langWrap = $("onboardLangs");
@@ -6205,6 +6246,7 @@
         }
         markOnboarded();
         closeModal(modal);
+        _onboardingOpen = false;
         toast(`Welcome aboard! Picked ${pickedArtists.size} artist${pickedArtists.size === 1 ? "" : "s"}.`);
         // Refresh home so personalization kicks in immediately
         if (typeof loadInitial === "function") loadInitial(true);
@@ -6299,7 +6341,13 @@
       wireToggle("settingsCrossfade", PREF.crossfade,
         (v, readOnly) => { if (!readOnly) state.crossfade = !!v; return state.crossfade !== false; }, "Crossfade");
       wireToggle("settingsQualityBadge", PREF.qualityBadge,
-        (v, readOnly) => readOnly ? getQualityBadgePref() : (updateQualityBadge?.(), v), "Quality badge");
+        (v, readOnly) => {
+          if (readOnly) return getQualityBadgePref();
+          // updateQualityBadge reads from localStorage which the wireToggle
+          // wrapper already wrote, so this picks up the new value.
+          updateQualityBadge?.();
+          return getQualityBadgePref();
+        }, "Quality badge");
 
       // Library
       $("settingsRedoOnboard").onclick = () => {
@@ -8252,7 +8300,12 @@
       let recent = getRecentlyPlayed().filter(s => s.id !== song.id);
       recent.unshift({ id: song.id, title: song.title, artist: song.artist, image: song.image, src: song.src, duration: song.duration, album: song.album });
       if (recent.length > 20) recent = recent.slice(0, 20);
-      localStorage.setItem(userKey("recent"), JSON.stringify(recent));
+      try { localStorage.setItem(userKey("recent"), JSON.stringify(recent)); }
+      catch (e) {
+        // Quota exceeded — drop to top 10 and try once more
+        try { localStorage.setItem(userKey("recent"), JSON.stringify(recent.slice(0, 10))); }
+        catch (e2) { console.warn("[storage] addToRecentlyPlayed failed:", e2?.message || e2); }
+      }
       renderRecentlyPlayed();
     }
 
@@ -8323,6 +8376,8 @@
     }
     function saveTaste(t) {
       try { localStorage.setItem(tasteKey(), JSON.stringify(t)); } catch {}
+      // Invalidate the getTasteProfile memo so the next read sees fresh data.
+      if (typeof _invalidateTasteCache === "function") _invalidateTasteCache();
     }
     // Apply exp(-Δdays / τ) decay so old plays fade. Returns current effective score.
     function _tasteDecayed(entry) {
@@ -8377,7 +8432,12 @@
     // Public read-out used by homepage rendering. Returns ranked artists/langs
     // plus an `isRich` flag — below threshold the home should fall back to
     // userLangs ordering so cold-start doesn't feel random.
+    // Memoized for ~150ms — homepage render path calls this 6x; without the
+    // cache that's 6× O(artists) decay computation. recordTaste invalidates.
+    let _tasteCache = null, _tasteCacheT = 0;
+    function _invalidateTasteCache() { _tasteCache = null; _tasteCacheT = 0; }
     function getTasteProfile() {
+      if (_tasteCache && Date.now() - _tasteCacheT < 150) return _tasteCache;
       const t = loadTaste();
       const artistArr = Object.entries(t.artists || {})
         .map(([name, e]) => ({ name, score: _tasteDecayed(e) }))
@@ -8826,10 +8886,8 @@
         if (typeof refreshActiveSongRows === "function") refreshActiveSongRows();
       } catch {}
     }
-    // Throttle-save during playback
-    audio.addEventListener("timeupdate", () => {
-      if (Date.now() - _lastResumeSave > 5000) saveResumePoint();
-    });
+    // Throttled save during playback is wired into the main `audio.ontimeupdate`
+    // handler above (single handler, no duplicate listener).
     // Persist on tab close so a hard reload right after pause is captured
     window.addEventListener("beforeunload", saveResumePoint);
 
