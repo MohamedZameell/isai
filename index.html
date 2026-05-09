@@ -613,8 +613,10 @@
       padding: 2px 8px;
       margin-left: 8px;
       border-radius: 4px;
-      background: rgba(255,255,255,0.10);
-      color: var(--text-sub);
+      /* WCAG AA: bumped bg opacity + brighter text so the pill is readable
+         on lock screens / sunlight. Previous rgba(.10) + var(--text-sub) was 2.5:1. */
+      background: rgba(139,92,255,0.28);
+      color: #f5f3ff;
       font-size: 0.65rem; font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -4722,12 +4724,12 @@
     function renderBanner(song, label) {
       if (!song) { dom.featuredBanner.innerHTML = ""; return; }
       dom.featuredBanner.innerHTML = `
-        ${song.image ? `<img class="banner-art" src="${song.image}" alt="">` : ""}
+        ${song.image ? `<img class="banner-art" src="${escapeAttr(song.image)}" alt="">` : ""}
         <div class="banner-gradient"></div>
         <div class="banner-content">
-          <div class="banner-label">${label || "Featured"}</div>
-          <div class="banner-title">${song.title}</div>
-          <div class="banner-sub">${song.artist}${song.album ? ` \u2022 ${song.album}` : ""}</div>
+          <div class="banner-label">${escapeHtml(label || "Featured")}</div>
+          <div class="banner-title">${escapeHtml(song.title || "")}</div>
+          <div class="banner-sub">${escapeHtml(song.artist || "")}${song.album ? ` \u2022 ${escapeHtml(song.album)}` : ""}</div>
           <div class="banner-play"><svg><use href="#ico-play"/></svg></div>
         </div>
       `;
@@ -8611,7 +8613,7 @@
       history.forEach(q => {
         const chip = document.createElement("button");
         chip.className = "search-history-chip";
-        chip.innerHTML = `${q}<span class="sh-remove" aria-label="Remove"><svg style="width:12px;height:12px;fill:currentColor"><use href="#ico-close"/></svg></span>`;
+        chip.innerHTML = `${escapeHtml(q)}<span class="sh-remove" aria-label="Remove"><svg style="width:12px;height:12px;fill:currentColor"><use href="#ico-close"/></svg></span>`;
         chip.onclick = (e) => {
           if (e.target.classList.contains("sh-remove")) {
             const updated = getSearchHistory().filter(h => h !== q);
@@ -8867,7 +8869,8 @@
     // Persist current queue + index + currentTime so a reload mid-song doesn't
     // forget your place. We don't autoplay (browser policy blocks it) — restore
     // the queue silently; first user-initiated play seeks to the saved offset.
-    const RESUME_KEY = "isai_resume_v1";
+    // User-scoped so device-shared accounts don't see each other's resume queue
+    function _resumeKey() { return userKey("resume_v1"); }
     let _lastResumeSave = 0;
     function saveResumePoint() {
       const cur = currentSong();
@@ -8885,12 +8888,12 @@
           idx: state.currentIndex,
           savedAt: now
         };
-        localStorage.setItem(RESUME_KEY, JSON.stringify(payload));
+        localStorage.setItem(_resumeKey(), JSON.stringify(payload));
       } catch {}
     }
     function loadResumePoint() {
       try {
-        const r = JSON.parse(localStorage.getItem(RESUME_KEY) || "null");
+        const r = JSON.parse(localStorage.getItem(_resumeKey()) || "null");
         if (!r || !r.songId || !Array.isArray(r.queue) || r.queue.length === 0) return;
         // Drop stale resume points older than 14 days
         if (Date.now() - (r.savedAt || 0) > 14 * 86_400_000) return;
